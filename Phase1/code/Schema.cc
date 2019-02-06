@@ -121,7 +121,7 @@ int Schema::Project(vector<int>& _attsToKeep) {
 	int numAtts = atts.size();
 	
 	// too many attributes to keep
-	if (numAttsToKeep > numAtts) return -1;
+	if (numAttsToKeep > numAtts) return -1;	
 
 	vector<Attribute> copy; atts.swap(copy);
 

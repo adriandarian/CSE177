@@ -18,6 +18,7 @@ private:
 	 * Avoid linear traversals when possible.
 	 */
 
+
 public:
 	/* Catalog constructor.
 	 * Initialize the catalog with the persistent data stored in _fileName.
