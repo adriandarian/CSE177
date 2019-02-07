@@ -9,6 +9,7 @@ using namespace std;
 
 //Could just have vectors for each instead
 /*
+
 vector<string> tablesList;
 vector<string> attsList;
 vector<string> pathToFile;
@@ -98,14 +99,14 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
 	//Check for a valid attribute type
 	//Integer in main-2.cc INTEGER in main.cc
-	for(int i = 0; i < _attributeTypes.size(); i++) {
+	for(int i = 0; i < _attributeTypes.size(); ++i) {
 		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String")
 			return false;
 	}
 
 	//Check for duplicate attributes, Return false if duplicate is found
 	unordered_set <string> attsHash;
-	for(int i = 0; i < _attributes.size(); i++) {
+	for(int i = 0; i < _attributes.size(); ++i) {
 		if(attsHash.find(_attributes[i]) != attsHash.end()) {
 			return false;
 		}
@@ -131,6 +132,11 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 
 bool Catalog::DropTable(string& _table) {
 	//Loop through list of tables and delete
+	for(auto it = tablesList.name.begin(); it != tablesList.name.end(); ++it) {
+		if(tablesList.name == _table) {
+
+		}
+	}
 	return true;
 }
 
