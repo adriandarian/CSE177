@@ -7,15 +7,14 @@
 
 using namespace std;
 
-//Could just have vectors for each instead
+// Could just have vectors for each instead
 /*
-
-vector<string> tablesList;
-vector<string> attsList;
-vector<string> pathToFile;
-vector<int> numTuples;
-vector<int> numDistinct;
-vector<Schema> schemaList; // Not sure if this is needed
+*	vector<string> tablesList;
+*	vector<string> attsList;
+*	vector<string> pathToFile;
+*	vector<int> numTuples;
+*	vector<int> numDistinct;
+*	vector<Schema> schemaList; // Not sure if this is needed
 */
 struct attsStruct {
 	string name;
@@ -26,11 +25,11 @@ struct attsStruct {
 struct tablesStruct {
 	string name;
 	string pathToFile;
-	//attsStruct atts;
+	// attsStruct atts;
 	int numTuples;
 };
 
-//List of all the tables with corresponding data
+// List of all the tables with corresponding data
 struct tablesCatalog {
 	vector<string> name;
 	vector<string> pathToFile;
@@ -89,24 +88,24 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 }
 
 bool Catalog::GetSchema(string& _table, Schema& _schema) {
-	//Loop through all tables
-	//Once _table is found set _schema to corresponding schema to that tables
-	//return true;
-	//else return false
+	// Loop through all tables
+	// Once _table is found set _schema to corresponding schema to that tables
+	// return true;
+	// else return false
 	return true;
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
-	//Check for a valid attribute type
-	//Integer in main-2.cc INTEGER in main.cc
-	for(int i = 0; i < _attributeTypes.size(); ++i) {
+	// Check for a valid attribute type
+	// Integer in main-2.cc INTEGER in main.cc
+	for(int i = 0; i < _attributeTypes.size(); i++) {
 		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String")
 			return false;
 	}
 
-	//Check for duplicate attributes, Return false if duplicate is found
-	unordered_set <string> attsHash;
-	for(int i = 0; i < _attributes.size(); ++i) {
+	// Check for duplicate attributes, Return false if duplicate is found
+	unordered_set<string> attsHash;
+	for(int i = 0; i < _attributes.size(); i++) {
 		if(attsHash.find(_attributes[i]) != attsHash.end()) {
 			return false;
 		}
