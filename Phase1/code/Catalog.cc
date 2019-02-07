@@ -7,36 +7,27 @@
 
 using namespace std;
 
-// Could just have vectors for each instead
-/*
-*	vector<string> tablesList;
-*	vector<string> attsList;
-*	vector<string> pathToFile;
-*	vector<int> numTuples;
-*	vector<int> numDistinct;
-*	vector<Schema> schemaList; // Not sure if this is needed
-*/
-struct attsStruct {
+
+struct AttsStruct {
 	string name;
 	string type;
-	int numDistinct;
+	int noDistinct;
 };
 
-struct tablesStruct {
+struct TablesStruct {
 	string name;
 	string pathToFile;
-	// attsStruct atts;
-	int numTuples;
+	//AttsStruct atts;
+	int noTuples;
 };
 
-// List of all the tables with corresponding data
-struct tablesCatalog {
-	vector<string> name;
-	vector<string> pathToFile;
-	vector<attsStruct> atts;
-	vector<int> numTuples;
-};
-tablesCatalog tablesList;
+vector<TablesStruct> tablesList;
+vector<string> attsList;
+vector<string> pathToFile;
+vector<int> noTuples;
+vector<int> noDistinct;
+vector<Schema> schemaList; // Not sure if this is needed
+
 
 Catalog::Catalog(string& _fileName) {
 	sqlite3 *db;
@@ -65,6 +56,16 @@ bool Catalog::GetNoTuples(string& _table, unsigned int& _noTuples) {
 }
 
 void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
+	//Loop through list of tables and delete
+	TablesStruct tab;
+	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
+		tab = *it;
+		if(tab.name == _table) {
+			tab.noTuples = _noTuples;
+			*it = tab;
+		}
+	}
+	
 }
 
 bool Catalog::GetDataFile(string& _table, string& _path) {
@@ -88,24 +89,24 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 }
 
 bool Catalog::GetSchema(string& _table, Schema& _schema) {
-	// Loop through all tables
-	// Once _table is found set _schema to corresponding schema to that tables
-	// return true;
-	// else return false
+	//Loop through all tables
+	//Once _table is found set _schema to corresponding schema to that tables
+	//return true;
+	//else return false
 	return true;
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
-	// Check for a valid attribute type
-	// Integer in main-2.cc INTEGER in main.cc
-	for(int i = 0; i < _attributeTypes.size(); i++) {
+	//Check for a valid attribute type
+	//Integer in main-2.cc INTEGER in main.cc
+	for(int i = 0; i < _attributeTypes.size(); ++i) {
 		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String")
 			return false;
 	}
 
-	// Check for duplicate attributes, Return false if duplicate is found
-	unordered_set<string> attsHash;
-	for(int i = 0; i < _attributes.size(); i++) {
+	//Check for duplicate attributes, Return false if duplicate is found
+	unordered_set <string> attsHash;
+	for(int i = 0; i < _attributes.size(); ++i) {
 		if(attsHash.find(_attributes[i]) != attsHash.end()) {
 			return false;
 		}
@@ -121,19 +122,25 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 		else {
 			tablesHash.insert(_table);
 		}
-	tablesList.name.push_back(_table);
-	tablesList.pathToFile.push_back("NoPath");
-	//tablesList.atts.push_back(_attributes);
-	tablesList.numTuples.push_back(0); 
+	TablesStruct newTable;
+	newTable.name = _table;
+	newTable.noTuples = 0;
+	newTable.pathToFile="NoPath";
+	tablesList.push_back(newTable);
 
 	return true;
 }
 
 bool Catalog::DropTable(string& _table) {
 	//Loop through list of tables and delete
-	for(auto it = tablesList.name.begin(); it != tablesList.name.end(); ++it) {
-		if(tablesList.name == _table) {
-
+	TablesStruct tab;
+	for(auto it = tablesList.begin(); it != tablesList.end();) {
+		tab = *it;
+		if(tab.name == _table) {
+			it = tablesList.erase(it);
+		}
+		else {
+			it++;
 		}
 	}
 	return true;
