@@ -9,12 +9,13 @@ using namespace std;
 
 
 //TODO: I don't think this garbo is even needed
+/*
 struct AttsStruct {
 	string name;
 	string type;
 	unsigned int noDistinct;
 };
-
+*/
 struct TablesStruct {
 	string name;
 	string pathToFile;
@@ -23,7 +24,8 @@ struct TablesStruct {
 };
 
 vector<TablesStruct> tablesList;
-vector<AttsStruct> attsList;
+//TODO: Delete
+//vector<AttsStruct> attsList;
 vector<string> pathToFile;
 vector<unsigned int> noTuples;
 vector<unsigned int> noDistinct;
@@ -138,7 +140,7 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				if(tab.schema.GetAtts()[i].name == _attribute) {
 					tempAttName.push_back(tab.schema.GetAtts()[i].name);
-					tempAttType.push_back(tab.schema.GetAtts[i].type);
+					tempAttType.push_back(tab.schema.GetAtts()[i].type);
 					/* TODO: Figure out which one?
 					tempAttDistincts.push_back(tab.schema.GetDistincts(tab.schema.GetAtts()[i].name)));
 					tempAttDistincts.push_back(tab.schema.GetAtts()[i].noDistinct);
@@ -186,7 +188,7 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 bool Catalog::GetSchema(string& _table, Schema& _schema) {
 	//Hashmap of schema and table?
 	TablesStruct tab;
-	for(auto it = tablesList.begin(); it != tablesList.end(); ++it;) {
+	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
 		if(tab.name == _table) {
 			_schema = tab.schema;
@@ -225,7 +227,8 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	//TODO: Ok this bullshit is way uglier than it needs to be. Simplify dum-dum
 	//Add new table
 	TablesStruct newTable;
-	AttsStruct newAtt;
+	//TODO: Delete
+	//AttsStruct newAtt;
 	
 	newTable.name = _table;
 	//Do I even set these or just keep at null
