@@ -218,7 +218,6 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 			return false;
 		}
 		else { //Not Found
-	unordered_set <string> attsHash;
 			//TODO: Add atts here instead
 			attsHash.insert(_attributes[i]);
 		}
