@@ -177,8 +177,8 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
-	//Check for a valid attribute type
-	//Integer in main-2.cc INTEGER in main.cc
+	// Check for a valid attribute type
+	// Integer in main-2.cc INTEGER in main.cc
 	for(int i = 0; i < _attributeTypes.size(); ++i) {
 		//TODO: Prettify this
 		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String")
@@ -234,7 +234,7 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 }
 
 bool Catalog::DropTable(string& _table) {
-	//Loop through list of tables and delete
+	// Loop through list of tables and delete
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end();) {
 		tab = *it;
