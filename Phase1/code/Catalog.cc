@@ -217,10 +217,12 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	//Have to list through total atts for the table
 	for(int i = 0; i < _attributes.size(); ++i) {
 		noDistinct.push_back(0); //For schema assigning
+		/*
 		newAtt.name = _attributes[i];
 		newAtt.type = _attributeTypes[i];
 		newAtt.noDistinct = 0;
 		attsList.push_back(newAtt);
+		*/
 	}
     Schema newSchema(_attributes, _attributeTypes, noDistinct);
 
