@@ -28,6 +28,10 @@ vector<string> pathToFile;
 vector<unsigned int> noTuples;
 vector<unsigned int> noDistinct;
 vector<Schema> schemaList; // Not sure if this is needed
+//Think these need to be here bc it is used by CreateTable() and DropTable()
+unordered_set <string> tablesHash;
+unordered_set <string> attsHash;
+
 
 
 Catalog::Catalog(string& _fileName) {
@@ -186,7 +190,6 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	}
 
 	//Check for duplicate tables
-	unordered_set <string> tablesHash;
 	if(tablesHash.find(_table) != tablesHash.end()) { // Found duplicate
 		return false;
 	}
@@ -195,12 +198,12 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	}
 
 	//Check for duplicate attributes, Return false if duplicate is found
-	unordered_set <string> attsHash;
 	for(int i = 0; i < _attributes.size(); ++i) {
 		if(attsHash.find(_attributes[i]) != attsHash.end()) { //Found duplicate
 			return false;
 		}
 		else { //Not Found
+	unordered_set <string> attsHash;
 			//TODO: Add atts here instead
 			attsHash.insert(_attributes[i]);
 		}
@@ -237,6 +240,14 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
+		//Check for duplicate tables
+	if(tablesHash.find(_table) != tablesHash.end()) { // Found duplicate
+		return false;
+	}
+	else { //Not Found
+		tablesHash.erase(_table);
+	}
+
 	for(auto it = tablesList.begin(); it != tablesList.end();) {
 		tab = *it;
 		if(tab.name == _table) {
