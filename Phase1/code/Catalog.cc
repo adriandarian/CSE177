@@ -224,6 +224,7 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 		attsList.push_back(newAtt);
 		*/
 	}
+	
     Schema newSchema(_attributes, _attributeTypes, noDistinct);
 
 	newTable.schema = newSchema;
