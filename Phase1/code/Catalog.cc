@@ -53,12 +53,15 @@ Catalog::~Catalog() {
 }
 
 bool Catalog::Save() {
-	//Update the database boi
+	//Update the database boi 
+	//Option 1: Delete everything from db, insert everyting into db from catalog.
+		//Do you always want to delete everything from the db?
+	//Option 2: Find duplicates, update duplicates, delete those that exist only in catalog but not in db?
+		//Insert the rest from catalog into DB
 	return true;
 }
 
 bool Catalog::GetNoTuples(string& _table, unsigned int& _noTuples) {
-	//TODO: Check mate (esp return false)
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
@@ -71,7 +74,6 @@ bool Catalog::GetNoTuples(string& _table, unsigned int& _noTuples) {
 }
 
 void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
-	//TODO: Check mate
 	//Loop through list of tables and delete
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
@@ -85,7 +87,6 @@ void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
 }
 
 bool Catalog::GetDataFile(string& _table, string& _path) {
-	//TODO: Check mate (esp return false)
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
@@ -99,7 +100,6 @@ bool Catalog::GetDataFile(string& _table, string& _path) {
 }
 
 void Catalog::SetDataFile(string& _table, string& _path) {
-	//TODO: Check mate
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
@@ -111,6 +111,7 @@ void Catalog::SetDataFile(string& _table, string& _path) {
 }
 
 bool Catalog::GetNoDistinct(string& _table, string& _attribute, unsigned int& _noDistinct) {
+	//TODO: Check mate. (esp return false)
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
@@ -126,22 +127,35 @@ bool Catalog::GetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 	return false;
 }
 void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _noDistinct) {
-		//TODO: Figure out what in the heck to put here
+	//TODO: Check mate
 	TablesStruct tab;
+	vector<string> tempAttName;
+	vector<string> tempAttType;
+	vector<unsigned int> tempAttDistincts;
 	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
 		if(tab.name == _table) {
 			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				if(tab.schema.GetAtts()[i].name == _attribute) {
-					//_noDistinct = tab.schema.GetDistincts(_attribute);
+					tempAttName.push_back(tab.schema.GetAtts()[i].name);
+					tempAttType.push_back(tab.schema.GetAtts[i].type);
+					/* TODO: Figure out which one?
+					tempAttDistincts.push_back(tab.schema.GetDistincts(tab.schema.GetAtts()[i].name)));
+					tempAttDistincts.push_back(tab.schema.GetAtts()[i].noDistinct);
+					*/
+					//Schema newSchema(tab.schema.GetAtts()[i].name, tab.schema.GetAtts()[i].type, tab.schema.GetAtts()[i].noDistinct)
+					//tab.schema.Swap(newSchema);
 				}
 			}
+			Schema newSchema(tempAttName,tempAttType, tempAttDistincts);
+			tab.schema.Swap(newSchema);
+
 		}
 	}
 }
 
 void Catalog::GetTables(vector<string>& _tables) {
-	//TODO: Can we just push_back straight to _tables?
+	//TODO: Can we just push_back straight to tables?
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
@@ -150,7 +164,7 @@ void Catalog::GetTables(vector<string>& _tables) {
 }
 
 bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
-	//TODO: Implement return false
+	//TODO: Can we push_back straight to _attributes? do we need to check it at all?
 	TablesStruct tab;
 	vector<string> newAtts;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
@@ -158,14 +172,15 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 		if(tab.name == _table) {
 			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				_attributes.push_back(tab.schema.GetAtts()[i].name);
-				//TODO: Is this needed?
+				//TODO: Is this needed instead?
 				//newAtts.push_back(tab.schema.GetAtts()[i].name);
+				return true;
 			}
 			
 		}
 	}
 	//_attributes = newAtts;
-	return true;
+	return false;
 }
 
 bool Catalog::GetSchema(string& _table, Schema& _schema) {
