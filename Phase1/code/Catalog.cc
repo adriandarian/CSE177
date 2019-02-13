@@ -23,7 +23,8 @@ struct TablesStruct {
 };
 
 vector<TablesStruct> tablesList;
-vector<AttsStruct> attsList;
+// TODO: Delete
+//vector<AttsStruct> attsList;
 vector<string> pathToFile;
 vector<unsigned int> noTuples;
 vector<unsigned int> noDistinct;
@@ -221,7 +222,8 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	// TODO: Ok this bullshit is way uglier than it needs to be. Simplify dum-dum
 	// Add new table
 	TablesStruct newTable;
-	AttsStruct newAtt;
+	// TODO: Delete
+	// AttsStruct newAtt;
 	
 	newTable.name = _table;
 	// Do I even set these or just keep at null
