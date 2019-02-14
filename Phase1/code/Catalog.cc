@@ -59,6 +59,8 @@ bool Catalog::Save() {
 		// Do you always want to delete everything from the db?
 	// Option 2: Find duplicates, update duplicates, delete those that exist only in catalog but not in db?
 		// Insert the rest from catalog into DB
+
+	
 	return true;
 }
 
@@ -137,8 +139,8 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 		if (tab.name == _table) {
 			for (int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				if (tab.schema.GetAtts()[i].name == _attribute) {
-					tempAttName.push_back(tab.schema.GetAtts()[i].name);
-					tempAttType.push_back(tab.schema.GetAtts[i].type);
+					// tempAttName.push_back(tab.schema.GetAtts()[i].name);
+					// tempAttType.push_back(tab.schema.GetAtts[i].type);
 					/* 
 					TODO: Figure out which one?
 					*  tempAttDistincts.push_back(tab.schema.GetDistincts(tab.schema.GetAtts()[i].name)));
