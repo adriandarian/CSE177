@@ -34,6 +34,7 @@ private:
 	//Think these need to be here bc it is used by CreateTable() and DropTable()
 
 
+
 public:
 	/* Catalog constructor.
 	 * Initialize the catalog with the persistent data stored in _fileName.
