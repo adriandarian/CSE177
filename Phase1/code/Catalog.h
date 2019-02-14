@@ -17,6 +17,22 @@ private:
 	 * Efficient data structures are recommended.
 	 * Avoid linear traversals when possible.
 	 */
+	struct TablesStruct {
+		string name;
+		string pathToFile;
+		Schema schema;
+		unsigned int noTuples;
+	};
+
+	vector<TablesStruct> tablesList;
+	//TODO: Delete
+	//vector<AttsStruct> attsList;
+	vector<string> pathToFile;
+	vector<unsigned int> noTuples;
+	vector<unsigned int> noDistinct;
+	vector<Schema> schemaList; // Not sure if this is needed
+	//Think these need to be here bc it is used by CreateTable() and DropTable()
+
 
 public:
 	/* Catalog constructor.
