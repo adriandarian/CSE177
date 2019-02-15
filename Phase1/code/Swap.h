@@ -10,10 +10,10 @@
 	typeof() operator.
 */
 
-// typeof() is deprecated as of c++11 so we switched to decltype()
-#define SWAP(a,b) {decltype(a) tmp=a; a=b; b=tmp;}
+// typeof() is deprecated as of c++11 so we switched to auto
+#define SWAP(a,b) {auto tmp=a; a=b; b=tmp;}
 // TODO: Get the below command working on make
-//#define SWAP(a,b) {decltype(a) a^=b; b^=a; a^=b;}
+// #define SWAP(a,b) {auto a^=b; b^=a; a^=b;}
 
 /* macro to swap content of STL-like containers/maps */
 #define STL_SWAP(a,b) a.swap(b);

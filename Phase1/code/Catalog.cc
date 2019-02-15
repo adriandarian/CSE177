@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <unordered_set>
 #include "sqlite3.h"
 #include <stdio.h>
@@ -22,30 +23,71 @@ struct AttsStruct {
 
 
 
-Catalog::Catalog(string& _fileName) {
-	sqlite3 *db;
-	char *zErrMsg = 0;
-	int rc;
+sqlite3 *db;
+char *zErrMsg = 0;
+int conn;
+char *sql;
 
-	rc = sqlite3_open("test.db", &db);
-
-	if( rc ) {
-		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-	} else {
-		fprintf(stderr, "Opened database successfully\n");
+static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
+	for (int i = 0; i < argc; i++) {
+		printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
 	}
+	printf("\n");
+	return 0;
+}
+
+Catalog::Catalog(string& _fileName) {
+	// Setup a connection to the database
+	conn = sqlite3_open(_fileName.c_str(), &db);
+
+	// check the database connection
+	if (conn) 
+		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+	else 
+		fprintf(stderr, "Opened database successfully\n");
+
+	TablesStruct tab;
+	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
+		tab = *it;
+	}
+
+
 	sqlite3_close(db);
 }
 
 Catalog::~Catalog() {
+	Save();
 }
 
 bool Catalog::Save() {
-	//Update the database boi 
-	//Option 1: Delete everything from db, insert everyting into db from catalog.
-		//Do you always want to delete everything from the db?
-	//Option 2: Find duplicates, update duplicates, delete those that exist only in catalog but not in db?
-		//Insert the rest from catalog into DB
+	// Update the database boi 
+	// Option 1: Delete everything from db, insert everyting into db from catalog.
+		// Do you always want to delete everything from the db?
+	// Option 2: Find duplicates, update duplicates, delete those that exist only in catalog but not in db?
+		// Insert the rest from catalog into DB
+
+	TablesStruct tab;
+	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
+		tab = *it;
+
+		/* Create SQL statement */
+		sql = "CREATE TABLE " + tab.name + "ID INT PRIMARY KEY     NOT NULL," \
+				"NAME           TEXT    NOT NULL," \
+				"AGE            INT     NOT NULL," \
+				"ADDRESS        CHAR(50)," \
+				"SALARY         REAL );";
+
+		/* Execute SQL statement */
+		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+		
+		if (conn != SQLITE_OK) {
+				fprintf(stderr, "SQL error: %s\n", zErrMsg);
+				sqlite3_free(zErrMsg);
+		} else {
+				fprintf(stdout, "Table created successfully\n");
+		}
+	}
+
 	return true;
 }
 

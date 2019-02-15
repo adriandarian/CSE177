@@ -42,21 +42,28 @@ private:
 public:
 	// default constructor
 	Schema() {}
+
 	// full constructor
-	Schema(vector<string>& _attributes,	vector<string>& _attributeTypes,
-		vector<unsigned int>& _distincts);
+	Schema(vector<string>& _attributes,	vector<string>& _attributeTypes, vector<unsigned int>& _distincts);
+
 	// copy constructor
 	Schema(const Schema& _other);
+
 	// assignment operator
 	Schema& operator=(const Schema& _other);
+
 	// swap function
 	void Swap(Schema& _other);
 
 	// destructor
-	virtual ~Schema() {atts.clear();}
+	virtual ~Schema() {
+		atts.clear();
+	}
 
 	// get functions
-	unsigned int GetNumAtts() {return atts.size();}
+	unsigned int GetNumAtts() {
+		return atts.size();
+	}
 	vector<Attribute>& GetAtts() {return atts;}
 
 	// append other schema
@@ -85,7 +92,7 @@ public:
 	Type FindType(string& _attName);
 
 	// operator for printing
-	friend ostream& operator<<(ostream& _os, Schema& _c);
+	friend ostream& operator << (ostream& _os, Schema& _c);
 };
 
 #endif //_SCHEMA
