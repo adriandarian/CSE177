@@ -17,7 +17,7 @@ private:
 	 * Efficient data structures are recommended.
 	 * Avoid linear traversals when possible.
 	 */
-
+	
 public:
 	/* Catalog constructor.
 	 * Initialize the catalog with the persistent data stored in _fileName.
@@ -38,6 +38,7 @@ public:
 	 */
 	bool Save();
 
+	//vector<TablesStruct> getAllTables() {return tablesList;}
 	/* Get/Set the number of tuples in _table.
 	 * Get returns true if _table exists, false otherwise.
 	 */
