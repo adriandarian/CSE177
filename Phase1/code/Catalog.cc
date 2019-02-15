@@ -27,6 +27,7 @@ struct TablesStruct {
 sqlite3 *db;
 char *zErrMsg = 0;
 int conn;
+const char* d = "Callback function called";
 string sql;
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
@@ -37,6 +38,7 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 	return 0;
 }
 string file;
+auto aaa = " ";
 
 Catalog::Catalog(string& _fileName) {
 	// Setup a connection to the database
@@ -53,13 +55,14 @@ Catalog::Catalog(string& _fileName) {
 	sql = "select name, pathToFile, noTuples from tables";
 
 	/* Execute SQL statement */
-	conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+	conn = sqlite3_exec(db, sql.c_str(), callback, (void*)d, &zErrMsg);
    
 	if (conn != SQLITE_OK) {
 		fprintf(stderr, "SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 	} else {
-		fprintf(stdout, "Table created successfully\n");
+		aaa = stdout;
+		fprintf(aaa, "Table created successfully\n");
 	}
 
 	sqlite3_close(db);
@@ -67,6 +70,7 @@ Catalog::Catalog(string& _fileName) {
 
 Catalog::~Catalog() {
 	Save();
+	cout << aaa;
 }
 
 bool Catalog::Save() {
@@ -129,6 +133,7 @@ void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
 			tab.noTuples = _noTuples;
 			*it = tab;
 		}
+		*it = tab;
 	}
 	
 }
@@ -206,7 +211,7 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				_attributes.push_back(tab.schema.GetAtts()[i].name);
 				//TODO: Is this needed instead?
-				//newAtts.push_b3ack(tab.schema.GetAtts()[i].name);
+				//newAtts.push_back(tab.schema.GetAtts()[i].name);
 				return true;
 			}
 			
@@ -230,12 +235,6 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
-	/*
-	int tablesCounter = 0;
-	for(int i = 0; i < tablesList.size(); ++i) {
-		tablesCounter++;
-	}
-	*/
 	TablesStruct tab;
 	for(int i = 0; i < _attributeTypes.size(); ++i) {
 		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String") {
@@ -252,8 +251,6 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 			return false;
 		}
 	}
-
-	//Check for duplicate attributes
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
 		for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
@@ -277,11 +274,11 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 		noDistinct.push_back(0); //For schema assigning
 	}
 	
-    Schema newSchema(_attributes, _attributeTypes, noDistinct);
+  Schema newSchema(_attributes, _attributeTypes, noDistinct);
 
 	newTable.schema = newSchema;
 	tablesList.push_back(newTable);
-	//schemaList.push_back(Schema(_attributes, _attributeTypes, noDistinct));
+
 	return true;
 }
 
