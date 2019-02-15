@@ -27,13 +27,13 @@ private:
 	vector<TablesStruct> tablesList;
 	//TODO: Delete
 	//vector<AttsStruct> attsList;
-	vector<string> pathToFile;
-	vector<unsigned int> noTuples;
+	//vector<string> pathToFile;
+	//vector<unsigned int> noTuples;
 	vector<unsigned int> noDistinct;
-	vector<Schema> schemaList; // Not sure if this is needed
+	//vector<Schema> schemaList; // Not sure if this is needed
 	//Think these need to be here bc it is used by CreateTable() and DropTable()
-
-
+	unordered_set <string> tablesHash;
+	unordered_set <string> attsHash;
 
 public:
 	/* Catalog constructor.

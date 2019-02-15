@@ -116,9 +116,9 @@ bool Catalog::GetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _noDistinct) {
 	//TODO: Check mate
 	TablesStruct tab;
-	vector<string> tempAttName;
-	vector<string> tempAttType;
-	vector<unsigned int> tempAttDistincts;
+//	vector<string> tempAttName;
+//	vector<string> tempAttType;
+//	vector<unsigned int> tempAttDistincts;
 	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
 		if(tab.name == _table) {
@@ -130,8 +130,8 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 					tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
 				}
 			}
-			Schema newSchema(tempAttName,tempAttType, tempAttDistincts);
-			tab.schema.Swap(newSchema);
+			//Schema newSchema(tempAttName,tempAttType, tempAttDistincts);
+			//tab.schema.Swap(newSchema);
 
 		}
 	}
