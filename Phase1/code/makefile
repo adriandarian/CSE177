@@ -7,7 +7,7 @@ ifdef linux
 endif
 
 main.out:	Schema.o Catalog.o main-2.o
-	$(CC) -o main-2.out main-2.o Catalog.o Schema.o -lsqlite3
+	$(CC) -o main.out main-2.o Catalog.o Schema.o -lsqlite3
 	
 main.o:	main-2.cc
 	$(CC) -c main-2.cc

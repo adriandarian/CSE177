@@ -1,46 +1,23 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_set>
-#include "sqlite3.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+
+#include "sqlite3.h"
 #include "Schema.h"
 #include "Catalog.h"
 
 using namespace std;
 
-	struct TablesStruct {
-		string name;
-		string pathToFile;
-		Schema schema;
-		unsigned int noTuples;
-		//unsigned int tableCount;
-	};
-
-	vector<TablesStruct> tablesList;
-	//TODO: Delete
-	//vector<AttsStruct> attsList;
-	//vector<string> pathToFile;
-	//vector<unsigned int> noTuples;
-	vector<unsigned int> noDistinct;
-
-//TODO: I don't think this garbo is even needed
-/*
-struct AttsStruct {
-	string name;
-	string type;
-	unsigned int noDistinct;
-};
-*/
-	unordered_set <string> tablesHash;
-	unordered_set <string> attsHash;
-
-
+unordered_set <string> tablesHash;
+unordered_set <string> attsHash;
 
 sqlite3 *db;
 char *zErrMsg = 0;
 int conn;
-char* sql;
+string sql;
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 	for (int i = 0; i < argc; i++) {
@@ -49,22 +26,31 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 	printf("\n");
 	return 0;
 }
+string file;
 
 Catalog::Catalog(string& _fileName) {
 	// Setup a connection to the database
 	conn = sqlite3_open(_fileName.c_str(), &db);
 
+	file = _fileName;
 	// check the database connection
 	if (conn) 
 		fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 	else 
 		fprintf(stderr, "Opened database successfully\n");
 
-	TablesStruct tab;
-	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
-		tab = *it;
-	}
+	/* Create SQL statement */
+	sql = "select name, pathToFile, noTuples from tables";
 
+	/* Execute SQL statement */
+	conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+   
+	if (conn != SQLITE_OK) {
+		fprintf(stderr, "SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+	} else {
+		fprintf(stdout, "Table created successfully\n");
+	}
 
 	sqlite3_close(db);
 }
@@ -80,17 +66,21 @@ bool Catalog::Save() {
 	// Option 2: Find duplicates, update duplicates, delete those that exist only in catalog but not in db?
 		// Insert the rest from catalog into DB
 
+	// Setup a connection to the database
+	conn = sqlite3_open(file.c_str(), &db);
+	
 	TablesStruct tab;
-	string temp;
-	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
+	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
-
 		/* Create SQL statement */
-		sql = "CREATE TABLE " + tab.name + "ID INT PRIMARY KEY     NOT NULL," \
-				"NAME           TEXT    NOT NULL," \
-				"AGE            INT     NOT NULL," \
-				"ADDRESS        CHAR(50)," \
-				"SALARY         REAL );";
+		string sql = "insert into tables (name, pathToFile, noTuples) " \
+			"values (\'" + tab.name + "\', \'" + tab.pathToFile + "\', " + to_string(tab.noTuples) + ");";
+
+		for (auto tableAttribute = 0; tableAttribute < tab.schema.GetAtts().size(); tableAttribute++) {
+			auto tableAttributes = tab.schema.GetAtts()[tableAttribute];
+			sql += "insert into attributes (name, type, noDistinct) " \
+				"values (\'" + tableAttributes.name + "\', \'" + to_string(tableAttributes.type) + "\', " + to_string(tableAttributes.noDistinct) + ");";
+		}
 
 		/* Execute SQL statement */
 		/*
@@ -108,21 +98,24 @@ bool Catalog::Save() {
 		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 		
 		if (conn != SQLITE_OK) {
-				fprintf(stderr, "SQL error: %s\n", zErrMsg);
-				sqlite3_free(zErrMsg);
+			fprintf(stderr, "SQL error: %s\n", zErrMsg);
+			sqlite3_free(zErrMsg);
 		} else {
-				fprintf(stdout, "Table created successfully\n");
+			fprintf(stdout, "Records created successfully\n");
 		}
 	}
+	
+
+	sqlite3_close(db);
 
 	return true;
 }
 
 bool Catalog::GetNoTuples(string& _table, unsigned int& _noTuples) {
 	TablesStruct tab;
-	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
+	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
-		if(tab.name == _table) {
+		if (tab.name == _table) {
 			_noTuples = tab.noTuples;
 			return true;
 		}
@@ -133,11 +126,10 @@ bool Catalog::GetNoTuples(string& _table, unsigned int& _noTuples) {
 void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
 	//Loop through list of tables and delete
 	TablesStruct tab;
-	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
+	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
-		if(tab.name == _table) {
+		if (tab.name == _table) {
 			tab.noTuples = _noTuples;
-			//*it = tab;
 		}
 	}
 	
@@ -183,27 +175,13 @@ bool Catalog::GetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 	return false;
 }
 void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _noDistinct) {
-	//TODO: Check mate
+	// TODO: Check mate
 	TablesStruct tab;
-//	vector<string> tempAttName;
-//	vector<string> tempAttType;
-//	vector<unsigned int> tempAttDistincts;
 	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
 		if(tab.name == _table) {
 			int attributeLocation = tab.schema.Index(_attribute);
 			tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
-			//TODO: IDK about this
-			/*
-			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
-				if(tab.schema.GetAtts()[i].name == _attribute) {
-					tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
-				}
-			}
-			*/
-			//Schema newSchema(tempAttName,tempAttType, tempAttDistincts);
-			//tab.schema.Swap(newSchema);
-
 		}
 	}
 }
@@ -242,10 +220,11 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 bool Catalog::GetSchema(string& _table, Schema& _schema) {
 	//Hashmap of schema and table?
 	TablesStruct tab;
-	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+	for (auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
-		if(tab.name == _table) {
+		if (tab.name == _table) {
 			_schema = tab.schema;
+			break;
 		}
 	}
 	return true;
