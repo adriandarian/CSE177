@@ -110,6 +110,10 @@ Catalog::~Catalog() {
 
 }
 
+string createQuotes( const string& s ) {
+    return string("\'") + s + string("\'");
+}
+
 bool Catalog::Save() {
 	// Update the database boi 
 	// Option 1: Delete everything from db, insert everyting into db from catalog.
@@ -120,17 +124,19 @@ bool Catalog::Save() {
 			// Setup a connection to the database
 	conn = sqlite3_open(file.c_str(), &db);
 	TablesStruct tab;
+
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
+		//fprintf(stdout, "\n ---- SQL: %s\n", sql.c_str());
+
 		string sql = "insert into tables (name, pathToFile, noTuples) " \
-			"values (\'" + tab.name + "\', \'" + tab.pathToFile + "\', " + to_string(tab.noTuples) + ");";
+			"values (" + createQuotes(tab.name) + "," + createQuotes(tab.pathToFile) + "," + createQuotes(to_string(tab.noTuples)) + ");";
 
 		for (auto tableAttribute = 0; tableAttribute < tab.schema.GetAtts().size(); tableAttribute++) {
 			auto tableAttributes = tab.schema.GetAtts()[tableAttribute];
 			sql += "insert into attributes (name, type, noDistinct, table_name) " \
-				"values (\'" + tableAttributes.name + "\', \'" + to_string(tableAttributes.type) + "\', " + to_string(tableAttributes.noDistinct) + ", " + tab.name + ");";
+				"values (" + createQuotes(tableAttributes.name) + "," + createQuotes(to_string(tableAttributes.type)) + ","+ createQuotes(to_string(tableAttributes.noDistinct)) + "," + createQuotes(tab.name) + ");";
 		}
-
 		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 		
 		if (conn != SQLITE_OK) {
@@ -259,28 +265,55 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
+	//Check for duplicate attributes
+	for(int i = 0; i < _attributes.size(); i++) {
+		for(int j = _attributes.size(); j > 0; j--) {
+			if((i != j) && (_attributes[i] == _attributes[j])) {
+	 			fprintf(stdout, "\nDuplicate Attribute\n");
+	 			return false;
+	 		}
+	 	}
+	}
+
 	// Add new table
 	TablesStruct tab;
-	for (auto it = tablesList.begin(); it != tablesList.end(); ++it) {
-		tab = *it;
-		if (tab.name == _table) {
-			printf("Duplicate Table: %s\n", _table.c_str());
-		} else {
-			// Initialize Table
-			tab.name = _table;
-			tab.noTuples = 0;
-			tab.pathToFile = "NoPath";
 
-			// Initialize Attributes
-			for (int i = 0; i < _attributes.size(); ++i) {
-				noDistinct.push_back(0); // For schema assigning
+	if(tablesList.size() == 0) {
+		tab.name = _table;
+		tab.noTuples = 0;
+		tab.pathToFile = "NoPath";
+		for (int i = 0; i < _attributes.size(); ++i) {
+			noDistinct.push_back(0); // For schema assigning
+		}
+		Schema newSchemaB(_attributes, _attributeTypes, noDistinct);
+		tab.schema = newSchemaB;
+		tablesList.push_back(tab);
+	} else {
+		for (auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+			tab = *it;
+			if (tab.name == _table) {
+				printf("Duplicate Table: %s\n", _table.c_str());
+				return false;
+			} else {
+				// Initialize Table
+				tab.name = _table;
+				tab.noTuples = 0;
+				tab.pathToFile = "NoPath";
+				// Initialize Attributes
+				for (int i = 0; i < _attributes.size(); ++i) {
+					noDistinct.push_back(0); // For schema assigning
+				}
+				Schema newSchema(_attributes, _attributeTypes, noDistinct);
+				tab.schema = newSchema;
+				
 			}
-			Schema newSchema(_attributes, _attributeTypes, noDistinct);
-			tab.schema = newSchema;
-			
 		}
 		tablesList.push_back(tab);
+
 	}
+
+
+	//fprintf(stdout, "TablesList size: %d\n", tablesList.size());
 
 	return true;
 }
@@ -288,7 +321,7 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
-
+	/*
 
 	conn = sqlite3_open(file.c_str(), &db);
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
@@ -322,7 +355,7 @@ bool Catalog::DropTable(string& _table) {
 			return false;
 		}
 	}
-
+	*/
 	return true;
 }
 
