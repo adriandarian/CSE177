@@ -23,8 +23,6 @@ struct TablesStruct {
 	vector<unsigned int> noDistinct;
 
 
-unordered_set <string> tablesHash;
-unordered_set <string> attsHash;
 
 sqlite3 *db;
 char *zErrMsg = 0;
@@ -129,6 +127,7 @@ void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
 		tab = *it;
 		if (tab.name == _table) {
 			tab.noTuples = _noTuples;
+			*it = tab;
 		}
 	}
 	
@@ -231,8 +230,6 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
-	// Check for a valid attribute type
-	// Integer in main-2.cc INTEGER in main.cc
 	/*
 	int tablesCounter = 0;
 	for(int i = 0; i < tablesList.size(); ++i) {
@@ -241,7 +238,6 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	*/
 	TablesStruct tab;
 	for(int i = 0; i < _attributeTypes.size(); ++i) {
-		//TODO: Prettify this
 		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String") {
 			fprintf(stdout, "\nAttribute type incorrect.\n");
 			return false;
@@ -256,63 +252,35 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 			return false;
 		}
 	}
-	/*
-	if(tablesHash.find(_table) != tablesHash.end()) { // Found duplicate
-		fprintf(stdout, "\nDuplicate Table\n");
-		return false;
-	}
-	else { //Not Found
-		tablesHash.insert(_table);
-	}
-	*/
+
+	//Check for duplicate attributes
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
-		if(tab.name == _table) {
-			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
-				if(_attributes[i] == tab.schema.GetAtts()[i].name) {
-					fprintf(stdout, "\n Duplicate Attribute Found\n");
-					return false;
-				}
-			}			
-		}
+		for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
+			if(_attributes[i] == tab.schema.GetAtts()[i].name) {
+				fprintf(stdout, "\n Duplicate Attribute Found\n");
+				return false;
+			}
+		}			
 	}
-	//Check for duplicate attributes, Return false if duplicate is found
-	for(int i = 0; i < _attributes.size(); ++i) {
-		if(attsHash.find(_attributes[i]) != attsHash.end()) { //Found duplicate
-			fprintf(stdout, "\nDuplicate Table\n");
-			return false;
-		}
-		else { //Not Found
-			//TODO: Add atts here instead
-			attsHash.insert(_attributes[i]);
-		}
-	}
-	//TODO: Ok this bullshit is way uglier than it needs to be. Simplify dum-dum
+
+
 	//Add new table
 	TablesStruct newTable;
-	//TODO: Delete
-	//AttsStruct newAtt;
 	
 	newTable.name = _table;
-	//Do I even set these or just keep at null
 	newTable.noTuples = 0;
 	newTable.pathToFile="NoPath";
 	//Have to list through total atts for the table
 	for(int i = 0; i < _attributes.size(); ++i) {
+
 		noDistinct.push_back(0); //For schema assigning
-		/*
-		newAtt.name = _attributes[i];
-		newAtt.type = _attributeTypes[i];
-		newAtt.noDistinct = 0;
-		attsList.push_back(newAtt);
-		*/
 	}
 	
     Schema newSchema(_attributes, _attributeTypes, noDistinct);
 
 	newTable.schema = newSchema;
 	tablesList.push_back(newTable);
-	//Need a way to tie schema and table - Done. Added schema to TablesStruct - removed Atts
 	//schemaList.push_back(Schema(_attributes, _attributeTypes, noDistinct));
 	return true;
 }
