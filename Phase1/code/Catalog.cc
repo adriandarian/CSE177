@@ -38,7 +38,6 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 	return 0;
 }
 string file;
-auto aaa = " ";
 
 Catalog::Catalog(string& _fileName) {
 	// Setup a connection to the database
@@ -61,8 +60,7 @@ Catalog::Catalog(string& _fileName) {
 		fprintf(stderr, "SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 	} else {
-		aaa = stdout;
-		fprintf(aaa, "Table created successfully\n");
+		fprintf(stdout, "Table created successfully\n");
 	}
 
 	sqlite3_close(db);
@@ -70,7 +68,6 @@ Catalog::Catalog(string& _fileName) {
 
 Catalog::~Catalog() {
 	Save();
-	cout << aaa;
 }
 
 bool Catalog::Save() {
@@ -285,7 +282,6 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
-		//Cannot find tables
 	for(auto it = tablesList.begin(); it != tablesList.end();) {
 		tab = *it;
 		if(tab.name == _table) {
