@@ -17,17 +17,7 @@ private:
 	 * Efficient data structures are recommended.
 	 * Avoid linear traversals when possible.
 	 */
-	struct TablesStruct {
-		string name;
-		string pathToFile;
-		Schema schema;
-		unsigned int noTuples;
-		//unsigned int tableCount;
-	};
-
-	vector<TablesStruct> tablesList;
-	vector<unsigned int> noDistinct;
-
+	
 public:
 	/* Catalog constructor.
 	 * Initialize the catalog with the persistent data stored in _fileName.

@@ -11,6 +11,18 @@
 
 using namespace std;
 
+struct TablesStruct {
+		string name;
+		string pathToFile;
+		Schema schema;
+		unsigned int noTuples;
+		//unsigned int tableCount;
+	};
+
+	vector<TablesStruct> tablesList;
+	vector<unsigned int> noDistinct;
+
+
 unordered_set <string> tablesHash;
 unordered_set <string> attsHash;
 
