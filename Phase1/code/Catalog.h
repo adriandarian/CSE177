@@ -22,6 +22,7 @@ private:
 		string pathToFile;
 		Schema schema;
 		unsigned int noTuples;
+		//unsigned int tableCount;
 	};
 
 	vector<TablesStruct> tablesList;
@@ -32,8 +33,6 @@ private:
 	vector<unsigned int> noDistinct;
 	//vector<Schema> schemaList; // Not sure if this is needed
 	//Think these need to be here bc it is used by CreateTable() and DropTable()
-	unordered_set <string> tablesHash;
-	unordered_set <string> attsHash;
 
 public:
 	/* Catalog constructor.
@@ -55,6 +54,7 @@ public:
 	 */
 	bool Save();
 
+	//vector<TablesStruct> getAllTables() {return tablesList;}
 	/* Get/Set the number of tuples in _table.
 	 * Get returns true if _table exists, false otherwise.
 	 */

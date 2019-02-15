@@ -9,6 +9,20 @@
 
 using namespace std;
 
+	struct TablesStruct {
+		string name;
+		string pathToFile;
+		Schema schema;
+		unsigned int noTuples;
+		//unsigned int tableCount;
+	};
+
+	vector<TablesStruct> tablesList;
+	//TODO: Delete
+	//vector<AttsStruct> attsList;
+	//vector<string> pathToFile;
+	//vector<unsigned int> noTuples;
+	vector<unsigned int> noDistinct;
 
 //TODO: I don't think this garbo is even needed
 /*
@@ -26,7 +40,7 @@ struct AttsStruct {
 sqlite3 *db;
 char *zErrMsg = 0;
 int conn;
-char *sql;
+char* sql;
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
 	for (int i = 0; i < argc; i++) {
@@ -67,6 +81,7 @@ bool Catalog::Save() {
 		// Insert the rest from catalog into DB
 
 	TablesStruct tab;
+	string temp;
 	for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
 
@@ -78,6 +93,18 @@ bool Catalog::Save() {
 				"SALARY         REAL );";
 
 		/* Execute SQL statement */
+		/*
+		if(sql.c_str() == Integer) {
+			temp = "INTEGER";
+		}
+		else if(sql.c_str() == Float) {
+			temp = "FLOAT";
+		}
+		else if(sql.c_str() == String) {
+			temp = "STRING";
+		}
+		*/
+		//temp = sql.c_str();
 		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 		
 		if (conn != SQLITE_OK) {
@@ -110,7 +137,7 @@ void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
 		tab = *it;
 		if(tab.name == _table) {
 			tab.noTuples = _noTuples;
-			*it = tab;
+			//*it = tab;
 		}
 	}
 	
@@ -134,7 +161,7 @@ void Catalog::SetDataFile(string& _table, string& _path) {
 		tab = *it;
 		if(tab.name == _table) {
 			tab.pathToFile = _path;
-			*it = tab;
+			//*it = tab;
 		}
 	}
 }
@@ -167,11 +194,13 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 			int attributeLocation = tab.schema.Index(_attribute);
 			tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
 			//TODO: IDK about this
+			/*
 			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				if(tab.schema.GetAtts()[i].name == _attribute) {
 					tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
 				}
 			}
+			*/
 			//Schema newSchema(tempAttName,tempAttType, tempAttDistincts);
 			//tab.schema.Swap(newSchema);
 
@@ -182,10 +211,12 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 void Catalog::GetTables(vector<string>& _tables) {
 	//TODO: Can we just push_back straight to tables?
 	TablesStruct tab;
+	vector<string> tables;
 	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
-		_tables.push_back(tab.name);
+		tables.push_back(tab.name);
 	}
+	_tables = tables;
 }
 
 bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
@@ -223,23 +254,53 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
 	// Check for a valid attribute type
 	// Integer in main-2.cc INTEGER in main.cc
+	/*
+	int tablesCounter = 0;
+	for(int i = 0; i < tablesList.size(); ++i) {
+		tablesCounter++;
+	}
+	*/
+	TablesStruct tab;
 	for(int i = 0; i < _attributeTypes.size(); ++i) {
 		//TODO: Prettify this
-		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String")
+		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String") {
+			fprintf(stdout, "\nAttribute type incorrect.\n");
 			return false;
+		}
 	}
 
 	//Check for duplicate tables
+	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+		tab = *it;
+		if(tab.name == _table) {
+			fprintf(stdout, "\nDuplicate Table\n");
+			return false;
+		}
+	}
+	/*
 	if(tablesHash.find(_table) != tablesHash.end()) { // Found duplicate
+		fprintf(stdout, "\nDuplicate Table\n");
 		return false;
 	}
 	else { //Not Found
 		tablesHash.insert(_table);
 	}
-
+	*/
+	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
+		tab = *it;
+		if(tab.name == _table) {
+			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
+				if(_attributes[i] == tab.schema.GetAtts()[i].name) {
+					fprintf(stdout, "\n Duplicate Attribute Found\n");
+					return false;
+				}
+			}			
+		}
+	}
 	//Check for duplicate attributes, Return false if duplicate is found
 	for(int i = 0; i < _attributes.size(); ++i) {
 		if(attsHash.find(_attributes[i]) != attsHash.end()) { //Found duplicate
+			fprintf(stdout, "\nDuplicate Table\n");
 			return false;
 		}
 		else { //Not Found
@@ -280,8 +341,9 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
-		//Check for duplicate tables
-	if(tablesHash.find(_table) != tablesHash.end()) { // Found duplicate
+		//Cannot find tables
+	if(tablesHash.find(_table) != tablesHash.end()) { // Tables does not exist
+		fprintf(stdout, "\nCannot find table\n");
 		return false;
 	}
 	else { //Not Found
@@ -314,24 +376,27 @@ bool Catalog::DropTable(string& _table) {
 	*/
 ostream& operator<<(ostream& _os, Catalog& _c) {
 	string typeConvert;
+	TablesStruct tab;
 	// Loop through all tables. 
-	for(int i = 0; i < _c.tablesList.size(); ++i) {
+	//for(int i = 0; i < tablesList.size(); ++i) {
+	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+		tab = *it;
 		//Print out tables with specified format
-		printf("%s \t %u \t %s \n", _c.tablesList[i].name.c_str(), _c.tablesList[i].noTuples, _c.tablesList[i].pathToFile.c_str());
+		printf("Path : %s\t %u\t %s \t", tab.name.c_str(), tab.noTuples, tab.pathToFile.c_str());
 			//Loop through attributes for a tables
-			for(int j = 0; j < _c.tablesList[i].schema.GetAtts().size(); ++i) {
+			for(int i = 0; i < tab.schema.GetNumAtts(); ++i) {
 				//string is needed. cannot get a type working in printf
-				if(_c.tablesList[j].schema.GetAtts()[i].type == Integer) {
+				if(tab.schema.GetAtts()[i].type == Integer) {
 					typeConvert = "Integer";
 				}
-				else if(_c.tablesList[j].schema.GetAtts()[i].type == Float) {
+				else if(tab.schema.GetAtts()[i].type == Float) {
 					typeConvert = "Float";
 				}
-				else if(_c.tablesList[j].schema.GetAtts()[i].type == String) {
+				else if(tab.schema.GetAtts()[i].type == String) {
 					typeConvert = "String";
 				}
 				//Print out attributes with specified format
-				printf("%s \t %s \t %u \n", _c.tablesList[j].schema.GetAtts()[i].name.c_str(), typeConvert.c_str(), _c.tablesList[j].schema.GetAtts()[i].noDistinct);
+				printf("Path : %s\t %s\t %u\t", tab.schema.GetAtts()[i].name.c_str(), typeConvert.c_str(), tab.schema.GetAtts()[i].noDistinct);
 			}
 	}
 	return _os;
