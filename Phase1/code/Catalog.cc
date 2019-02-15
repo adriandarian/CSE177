@@ -181,6 +181,7 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 		if(tab.name == _table) {
 			int attributeLocation = tab.schema.Index(_attribute);
 			tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
+			*it = tab;
 		}
 	}
 }
@@ -223,10 +224,10 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 		tab = *it;
 		if (tab.name == _table) {
 			_schema = tab.schema;
-			break;
+			return true;
 		}
 	}
-	return true;
+	return false;
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
