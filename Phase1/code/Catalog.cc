@@ -27,8 +27,10 @@ vector<unsigned int> noDistinct;
 
 sqlite3 *db;
 sqlite3_stmt *stmt;
+sqlite3_stmt *res;
 char *zErrMsg = 0;
 int conn;
+int rc;
 const char* d = "Callback function called";
 string sql;
 
@@ -66,12 +68,31 @@ Catalog::Catalog(string& _fileName) {
 
 	TablesStruct tab;                                                             
 
-	while ( (conn = sqlite3_step(stmt)) == SQLITE_ROW) {                                              
+	while ((conn = sqlite3_step(stmt)) == SQLITE_ROW) {                                              
 		printf("%s | %s | %d\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2)); 
 		
 		tab.name = reinterpret_cast<const char*> (sqlite3_column_text(stmt, 0));
 		tab.pathToFile = reinterpret_cast<const char*> (sqlite3_column_text(stmt, 1));
 		tab.noTuples = sqlite3_column_int(stmt, 2);
+
+		sql = "select name, type, noDistinct, table_name from attributes";
+		rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &res, 0);
+
+		if (rc != SQLITE_OK) {
+			fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
+			sqlite3_close(db);
+		}
+
+		while ((rc = sqlite3_step(res)) == SQLITE_ROW) {
+			printf("%s | %s | %d | %s\n", sqlite3_column_text(res, 0), sqlite3_column_text(res, 1), sqlite3_column_int(res, 2), sqlite3_column_text(res, 3)); 
+			if (tab.name == reinterpret_cast<const char*> (sqlite3_column_text(res, 3))) {
+				for (auto i = 0; i < tab.schema.GetAtts().size(); i++) {
+					tab.schema.GetAtts()[i].name = reinterpret_cast<const char*> (sqlite3_column_text(res, 0));
+					// tab.schema.GetAtts()[i].type = reinterpret_cast<Type> (sqlite3_column_text(res, 1));
+					tab.schema.GetAtts()[i].noDistinct = sqlite3_column_int(res, 2);
+				}
+			}
+		}
 
 
 	}
@@ -260,33 +281,6 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 		}
 		tablesList.push_back(tab);
 	}
-
-
-	// for (int i = 0; i < _attributeTypes.size(); ++i) {
-	// 	if (_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String") {
-	// 		fprintf(stdout, "\nAttribute type incorrect.\n");
-	// 		return false;
-	// 	}
-	// }
-
-	// // Check for duplicate tables
-	// for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
-	// 	tab = *it;
-	// 	if(tab.name == _table) {
-	// 		fprintf(stdout, "\nDuplicate Table\n");
-	// 		return false;
-	// 	}
-	// }
-
-	// //Check for duplicate attributes
-	// for(int i = 0; i < _attributes.size(); ++i) {
-	// 	for(int j = 0; j < _attributes.size(); ++j) {
-	// 		if((i != j) && (_attributes[i] == _attributes[j])) {
-	// 			fprintf(stdout, "\nDuplicate Attribute\n");
-	// 			return false;
-	// 		}
-	// 	}
-	// }
 
 	return true;
 }
