@@ -11,20 +11,22 @@
 
 using namespace std;
 
+// 2-4pm Tuesdays for TA se2 first floor or 313
+// 3-5pm Friday for Professor se2 210
+
 struct TablesStruct {
-		string name;
-		string pathToFile;
-		Schema schema;
-		unsigned int noTuples;
-		//unsigned int tableCount;
-	};
+	string name;
+	string pathToFile;
+	Schema schema;
+	unsigned int noTuples;
+	//unsigned int tableCount;
+};
 
-	vector<TablesStruct> tablesList;
-	vector<unsigned int> noDistinct;
-
-
+vector<TablesStruct> tablesList;
+vector<unsigned int> noDistinct;
 
 sqlite3 *db;
+sqlite3_stmt *stmt;
 char *zErrMsg = 0;
 int conn;
 const char* d = "Callback function called";
@@ -54,20 +56,37 @@ Catalog::Catalog(string& _fileName) {
 	sql = "select name, pathToFile, noTuples from tables";
 
 	/* Execute SQL statement */
-	conn = sqlite3_exec(db, sql.c_str(), callback, (void*)d, &zErrMsg);
-   
+	//conn = sqlite3_exec(db, sql.c_str(), callback, (void*)d, &zErrMsg);
+  conn = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);    
+	
 	if (conn != SQLITE_OK) {
-		fprintf(stderr, "SQL error: %s\n", zErrMsg);
-		sqlite3_free(zErrMsg);
-	} else {
-		fprintf(stdout, "Table created successfully\n");
+		fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
+	}    
+
+	TablesStruct tab;                                                             
+
+	while ( (conn = sqlite3_step(stmt)) == SQLITE_ROW) {                                              
+		printf("%s | %s | %d\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2)); 
+		
+		tab.name = reinterpret_cast<const char*> (sqlite3_column_text(stmt, 0));
+		tab.pathToFile = reinterpret_cast<const char*> (sqlite3_column_text(stmt, 1));
+		tab.noTuples = sqlite3_column_int(stmt, 2);
+
+
 	}
+	sqlite3_finalize(stmt);
+	
+
+	
+
+	
 
 	sqlite3_close(db);
 }
 
 Catalog::~Catalog() {
-	Save();
+
 }
 
 bool Catalog::Save() {
@@ -77,20 +96,18 @@ bool Catalog::Save() {
 	// Option 2: Find duplicates, update duplicates, delete those that exist only in catalog but not in db?
 		// Insert the rest from catalog into DB
 
-	// Setup a connection to the database
+			// Setup a connection to the database
 	conn = sqlite3_open(file.c_str(), &db);
-	
 	TablesStruct tab;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
-		/* Create SQL statement */
 		string sql = "insert into tables (name, pathToFile, noTuples) " \
 			"values (\'" + tab.name + "\', \'" + tab.pathToFile + "\', " + to_string(tab.noTuples) + ");";
 
 		for (auto tableAttribute = 0; tableAttribute < tab.schema.GetAtts().size(); tableAttribute++) {
 			auto tableAttributes = tab.schema.GetAtts()[tableAttribute];
-			sql += "insert into attributes (name, type, noDistinct) " \
-				"values (\'" + tableAttributes.name + "\', \'" + to_string(tableAttributes.type) + "\', " + to_string(tableAttributes.noDistinct) + ");";
+			sql += "insert into attributes (name, type, noDistinct, table_name) " \
+				"values (\'" + tableAttributes.name + "\', \'" + to_string(tableAttributes.type) + "\', " + to_string(tableAttributes.noDistinct) + ", " + tab.name + ");";
 		}
 
 		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
@@ -99,12 +116,11 @@ bool Catalog::Save() {
 			fprintf(stderr, "SQL error: %s\n", zErrMsg);
 			sqlite3_free(zErrMsg);
 		} else {
-			fprintf(stdout, "Records created successfully\n");
+			fprintf(stdout, "Record created successfully\n");
 		}
 	}
-	
-
 	sqlite3_close(db);
+
 
 	return true;
 }
@@ -188,33 +204,24 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 }
 
 void Catalog::GetTables(vector<string>& _tables) {
-	//TODO: Can we just push_back straight to tables?
 	TablesStruct tab;
-	vector<string> tables;
-	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+	for (auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
-		tables.push_back(tab.name);
+		_tables.push_back(tab.name);
 	}
-	_tables = tables;
 }
 
 bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
-	//TODO: Can we push_back straight to _attributes? do we need to check it at all?
 	TablesStruct tab;
-	vector<string> newAtts;
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
 		if(tab.name == _table) {
 			for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
 				_attributes.push_back(tab.schema.GetAtts()[i].name);
-				//TODO: Is this needed instead?
-				//newAtts.push_back(tab.schema.GetAtts()[i].name);
-				return true;
-			}
-			
+			}			
+			return true;
 		}
 	}
-	//_attributes = newAtts;
 	return false;
 }
 
@@ -231,50 +238,55 @@ bool Catalog::GetSchema(string& _table, Schema& _schema) {
 }
 
 bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<string>& _attributeTypes) {
+	// Add new table
 	TablesStruct tab;
-	for(int i = 0; i < _attributeTypes.size(); ++i) {
-		if(_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String") {
-			fprintf(stdout, "\nAttribute type incorrect.\n");
-			return false;
-		}
-	}
-
-	//Check for duplicate tables
-	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+	for (auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
-		if(tab.name == _table) {
-			fprintf(stdout, "\nDuplicate Table\n");
-			return false;
-		}
-	}
+		if (tab.name == _table) {
+			printf("Duplicate Table: %s\n", _table.c_str());
+		} else {
+			// Initialize Table
+			tab.name = _table;
+			tab.noTuples = 0;
+			tab.pathToFile = "NoPath";
 
-	//Check for duplicate attributes
-	for(int i = 0; i < _attributes.size(); ++i) {
-		for(int j = 0; j < _attributes.size(); ++j) {
-			if((i != j) && (_attributes[i] == _attributes[j])) {
-				fprintf(stdout, "\nDuplicate Attribute\n");
-				return false;
+			// Initialize Attributes
+			for (int i = 0; i < _attributes.size(); ++i) {
+				noDistinct.push_back(0); // For schema assigning
 			}
+			Schema newSchema(_attributes, _attributeTypes, noDistinct);
+			tab.schema = newSchema;
+			
 		}
+		tablesList.push_back(tab);
 	}
 
 
-	//Add new table
-	TablesStruct newTable;
-	
-	newTable.name = _table;
-	newTable.noTuples = 0;
-	newTable.pathToFile="NoPath";
-	//Have to list through total atts for the table
-	for(int i = 0; i < _attributes.size(); ++i) {
+	// for (int i = 0; i < _attributeTypes.size(); ++i) {
+	// 	if (_attributeTypes[i] != "Integer" || _attributeTypes[i] != "Float" || _attributeTypes[i] != "String") {
+	// 		fprintf(stdout, "\nAttribute type incorrect.\n");
+	// 		return false;
+	// 	}
+	// }
 
-		noDistinct.push_back(0); //For schema assigning
-	}
-	
-  Schema newSchema(_attributes, _attributeTypes, noDistinct);
+	// // Check for duplicate tables
+	// for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
+	// 	tab = *it;
+	// 	if(tab.name == _table) {
+	// 		fprintf(stdout, "\nDuplicate Table\n");
+	// 		return false;
+	// 	}
+	// }
 
-	newTable.schema = newSchema;
-	tablesList.push_back(newTable);
+	// //Check for duplicate attributes
+	// for(int i = 0; i < _attributes.size(); ++i) {
+	// 	for(int j = 0; j < _attributes.size(); ++j) {
+	// 		if((i != j) && (_attributes[i] == _attributes[j])) {
+	// 			fprintf(stdout, "\nDuplicate Attribute\n");
+	// 			return false;
+	// 		}
+	// 	}
+	// }
 
 	return true;
 }
@@ -282,6 +294,30 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
+
+
+	conn = sqlite3_open(file.c_str(), &db);
+	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
+		tab = *it;
+		string sql = "delete from tables where name = \'" + _table + "\';";
+
+		for (auto tableAttribute = 0; tableAttribute < tab.schema.GetAtts().size(); tableAttribute++) {
+			auto tableAttributes = tab.schema.GetAtts()[tableAttribute];
+			if (_table == tab.name) {
+				sql += "delete from attributes where name = \'" + tableAttributes.name + "\';";
+			}
+		}
+
+		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+		
+		if (conn != SQLITE_OK) {
+			fprintf(stderr, "SQL error: %s\n", zErrMsg);
+			sqlite3_free(zErrMsg);
+		} else {
+			fprintf(stdout, "Record created successfully\n");
+		}
+	}
+
 	for(auto it = tablesList.begin(); it != tablesList.end();) {
 		tab = *it;
 		if(tab.name == _table) {
@@ -289,8 +325,10 @@ bool Catalog::DropTable(string& _table) {
 		}
 		else {
 			it++;
+			return false;
 		}
 	}
+
 	return true;
 }
 
@@ -310,11 +348,10 @@ ostream& operator<<(ostream& _os, Catalog& _c) {
 	string typeConvert;
 	TablesStruct tab;
 	// Loop through all tables. 
-	//for(int i = 0; i < tablesList.size(); ++i) {
 	for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
 		//Print out tables with specified format
-		printf("Path : %s\t %u\t %s \t", tab.name.c_str(), tab.noTuples, tab.pathToFile.c_str());
+		printf("Table Output : %s\t %u\t %s \t \n", tab.name.c_str(), tab.noTuples, tab.pathToFile.c_str());
 			//Loop through attributes for a tables
 			for(int i = 0; i < tab.schema.GetNumAtts(); ++i) {
 				//string is needed. cannot get a type working in printf
@@ -328,7 +365,7 @@ ostream& operator<<(ostream& _os, Catalog& _c) {
 					typeConvert = "String";
 				}
 				//Print out attributes with specified format
-				printf("Path : %s\t %s\t %u\t", tab.schema.GetAtts()[i].name.c_str(), typeConvert.c_str(), tab.schema.GetAtts()[i].noDistinct);
+				printf("Attribute Output : %s\t %s\t %u\t \n", tab.schema.GetAtts()[i].name.c_str(), typeConvert.c_str(), tab.schema.GetAtts()[i].noDistinct);
 			}
 	}
 	return _os;
