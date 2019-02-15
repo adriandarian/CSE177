@@ -94,19 +94,6 @@ bool Catalog::Save() {
 				"values (\'" + tableAttributes.name + "\', \'" + to_string(tableAttributes.type) + "\', " + to_string(tableAttributes.noDistinct) + ");";
 		}
 
-		/* Execute SQL statement */
-		/*
-		if(sql.c_str() == Integer) {
-			temp = "INTEGER";
-		}
-		else if(sql.c_str() == Float) {
-			temp = "FLOAT";
-		}
-		else if(sql.c_str() == String) {
-			temp = "STRING";
-		}
-		*/
-		//temp = sql.c_str();
 		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 		
 		if (conn != SQLITE_OK) {
@@ -165,7 +152,7 @@ void Catalog::SetDataFile(string& _table, string& _path) {
 		tab = *it;
 		if(tab.name == _table) {
 			tab.pathToFile = _path;
-			//*it = tab;
+			*it = tab;
 		}
 	}
 }
