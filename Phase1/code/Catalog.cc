@@ -217,7 +217,6 @@ bool Catalog::GetAttributes(string& _table, vector<string>& _attributes) {
 }
 
 bool Catalog::GetSchema(string& _table, Schema& _schema) {
-	//Hashmap of schema and table?
 	TablesStruct tab;
 	for (auto it = tablesList.begin(); it != tablesList.end(); ++it) {
 		tab = *it;
@@ -254,14 +253,13 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 	}
 
 	//Check for duplicate attributes
-	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
-		tab = *it;
-		for(int i = 0; i < tab.schema.GetAtts().size(); ++i) {
-			if(_attributes[i] == tab.schema.GetAtts()[i].name) {
-				fprintf(stdout, "\n Duplicate Attribute Found\n");
+	for(int i = 0; i < _attributes.size(); ++i) {
+		for(int j = 0; j < _attributes.size(); ++j) {
+			if((i != j) && (_attributes[i] == _attributes[j])) {
+				fprintf(stdout, "\nDuplicate Attribute\n");
 				return false;
 			}
-		}			
+		}
 	}
 
 
@@ -289,14 +287,6 @@ bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
 		//Cannot find tables
-	if(tablesHash.find(_table) != tablesHash.end()) { // Tables does not exist
-		fprintf(stdout, "\nCannot find table\n");
-		return false;
-	}
-	else { //Not Found
-		tablesHash.erase(_table);
-	}
-
 	for(auto it = tablesList.begin(); it != tablesList.end();) {
 		tab = *it;
 		if(tab.name == _table) {
