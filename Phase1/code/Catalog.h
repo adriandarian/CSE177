@@ -38,7 +38,6 @@ public:
 	 */
 	bool Save();
 
-	//vector<TablesStruct> getAllTables() {return tablesList;}
 	/* Get/Set the number of tuples in _table.
 	 * Get returns true if _table exists, false otherwise.
 	 */
