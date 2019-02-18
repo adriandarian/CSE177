@@ -72,67 +72,67 @@ int main (int argc, char* argv[]) {
 	cout << catalog << endl; cout.flush();
 
 
-	// ////////////////////////////////
-	// vector<string> tables;
-	// catalog.GetTables(tables);
-	// for (vector<string>::iterator it = tables.begin();
-	// 	 it != tables.end(); it++) {
-	// 	cout << *it << endl;
-	// }
-	// cout << endl;
+	////////////////////////////////
+	vector<string> tables;
+	catalog.GetTables(tables);
+	for (vector<string>::iterator it = tables.begin();
+		 it != tables.end(); it++) {
+		cout << *it << endl;
+	}
+	cout << endl;
 
 
-	// ////////////////////////////////
-	// for (int i = 0; i < 1000; i++) {
-	// 	int r = rand() % tNo + 1;
-	// 	char tN[20]; sprintf(tN, "T_%d", r);
-	// 	string tName = tN;
+	//////////////////////////////
+	for (int i = 0; i < 1000; i++) {
+		int r = rand() % tNo + 1;
+		char tN[20]; sprintf(tN, "T_%d", r);
+		string tName = tN;
 
-	// 	unsigned int tuples;
-	// 	catalog.GetNoTuples(tName, tuples);
-	// 	cout << tName << " tuples = " << tuples << endl;
+		unsigned int tuples;
+		catalog.GetNoTuples(tName, tuples);
+		cout << tName << " tuples = " << tuples << endl;
 
-	// 	string path;
-	// 	catalog.GetDataFile(tName, path);
-	// 	cout << tName << " path = " << path << endl;
+		string path;
+		catalog.GetDataFile(tName, path);
+		cout << tName << " path = " << path << endl;
 
-	// 	vector<string> atts;
-	// 	catalog.GetAttributes(tName, atts);
-	// 	for (vector<string>::iterator it = atts.begin();
-	// 		 it != atts.end(); it++) {
-	// 		cout << *it << " ";
-	// 	}
-	// 	cout << endl;
+		vector<string> atts;
+		catalog.GetAttributes(tName, atts);
+		for (vector<string>::iterator it = atts.begin();
+			 it != atts.end(); it++) {
+			cout << *it << " ";
+		}
+		cout << endl;
 
-	// 	Schema schema;
-	// 	catalog.GetSchema(tName, schema);
-	// 	cout << schema << endl;
+		Schema schema;
+		catalog.GetSchema(tName, schema);
+		cout << schema << endl;
 
-	// 	////////////////////////////////
-	// 	for (int j = 0; j < 10; j++) {
-	// 		int s = rand() % (r * aNo) + 1;
-	// 		char aN[20]; sprintf(aN, "A_%d_%d", r, s);
-	// 		string aName = aN;
+		////////////////////////////////
+		for (int j = 0; j < 10; j++) {
+			int s = rand() % (r * aNo) + 1;
+			char aN[20]; sprintf(aN, "A_%d_%d", r, s);
+			string aName = aN;
 
-	// 		unsigned int distinct;
-	// 		catalog.GetNoDistinct(tName, aName, distinct);
-	// 		cout << tName << "." << aName << " distinct = " << distinct << endl;
-	// 	}
-	// }
+			unsigned int distinct;
+			catalog.GetNoDistinct(tName, aName, distinct);
+			cout << tName << "." << aName << " distinct = " << distinct << endl;
+		}
+	}
 
-	// ////////////////////////////////
-	// for (int i = 0; i < 5; i++) {
-	// 	char tN[20]; sprintf(tN, "T_%d", i);
-	// 	string tName = tN;
+	//////////////////////////////
+	for (int i = 0; i < 5; i++) {
+		char tN[20]; sprintf(tN, "T_%d", i);
+		string tName = tN;
 
-	// 	bool ret = catalog.DropTable(tName);
-	// 	if (true == ret) {
-	// 		cout << "DROP TABLE " << tName << " OK" << endl;
-	// 	}
-	// 	else {
-	// 		cout << "DROP TABLE " << tName << " FAIL" << endl;
-	// 	}
-	// }
+		bool ret = catalog.DropTable(tName);
+		if (true == ret) {
+			cout << "DROP TABLE " << tName << " OK" << endl;
+		}
+		else {
+			cout << "DROP TABLE " << tName << " FAIL" << endl;
+		}
+	}
 
 	return 0;
 }
