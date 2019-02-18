@@ -99,12 +99,6 @@ Catalog::Catalog(string& _fileName) {
 
 	}
 	sqlite3_finalize(stmt);
-	
-
-	
-
-	
-
 	sqlite3_close(db);
 }
 
