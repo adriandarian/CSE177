@@ -1,0 +1,28 @@
+{
+  "clang.cxxflags": ["-std=c++14"],
+  "clang.cflags": [
+    "c11"
+  ],
+  "cSpell.words": [
+    "swapify"
+  ],
+  "files.associations": {
+    "*.html": "html",
+    "*.sqlite": "sql",
+    "*.jsx": "javascriptreact",
+    "vector": "cpp"
+  },
+  "sqltools.connections": [
+    {
+      "askForPassword": false,
+      "connectionTimeout": 500,
+      "database": "test_db",
+      "dialect": "PostgreSQL",
+      "name": "sqlite",
+      "password": "root",
+      "port": 5432,
+      "server": "localhost",
+      "username": "root"
+    }
+  ],
+}
