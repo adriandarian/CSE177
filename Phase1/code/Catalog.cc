@@ -69,6 +69,7 @@ Catalog::Catalog(string& _fileName) {
 
 	TablesStruct tab;                                                             
 
+	//Getting information already in the database and add it to our catalog
 	while ((conn = sqlite3_step(stmt)) == SQLITE_ROW) {                                              
 		printf("%s | %s | %d\n", sqlite3_column_text(stmt, 0), sqlite3_column_text(stmt, 1), sqlite3_column_int(stmt, 2)); 
 		
@@ -127,16 +128,16 @@ bool Catalog::Save() {
 	conn = sqlite3_open(file.c_str(), &db);
 	TablesStruct tab;
 
+	//Big loop through tables to create the insert sql statements
 	for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
 		tab = *it;
-		string sqlTest = "insert into tables(name, pathTofile, noTuple) values (?,?,?);";
-		conn = sqlite3_prepare_v2(db, sqlTest.c_str(), -1, &stmt, 0);
 		string sql = "insert into tables (name, pathToFile, noTuples) " \
 			"values (" + createQuotes(tab.name) + "," + createQuotes(tab.pathToFile) + "," + createQuotes(to_string(tab.noTuples)) + ");";
+		//Looping through attributes in catalog to create sql insert statement
 		for (auto tableAttribute = 0; tableAttribute < tab.schema.GetAtts().size(); tableAttribute++) {
 			auto tableAttributes = tab.schema.GetAtts()[tableAttribute];
 			
-			//Type conversion 
+			//Make it a string so it works. Type does not work
 			if(tableAttributes.type == Integer) {
 				typeString = "Integer";
 			}
@@ -146,10 +147,10 @@ bool Catalog::Save() {
 			else if (tableAttributes.type == String) {
 				typeString = "String";
 			}
-			
+			//Append to sql statement
 			sql += "insert into attributes (name, type, noDistinct, table_name) " \
 				"values (" + createQuotes(tableAttributes.name) + "," + createQuotes(to_string(tableAttributes.type)) + ","+ createQuotes(to_string(tableAttributes.noDistinct)) + "," + createQuotes(tab.name) + ");";
-		} //Attribute For
+		} //Attribute For End
 		conn = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 		if (conn != SQLITE_OK) {
 			fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -157,7 +158,7 @@ bool Catalog::Save() {
 		} else {
 			fprintf(stdout, "Record created successfully\n");
 		}
-	}// Table For		
+	}// Table For End
 
 	sqlite3_close(db);
 
@@ -349,7 +350,7 @@ bool Catalog::CreateTable(string& _table, vector<string>& _attributes, vector<st
 bool Catalog::DropTable(string& _table) {
 	// Loop through list of tables and delete
 	TablesStruct tab;
-
+	bool deleted = false;
 	//TODO: Maybe loop through tablesList first and see what needs to be deleted. Then do the actual SQL delete afterwards?
 
 	conn = sqlite3_open(file.c_str(), &db);
@@ -361,6 +362,7 @@ bool Catalog::DropTable(string& _table) {
 			auto tableAttributes = tab.schema.GetAtts()[tableAttribute];
 			if (_table == tab.name) {
 				sql += "delete from attributes where name = " + createQuotes(tableAttributes.name) + ";";
+				deleted = true;
 			}
 		}
 
@@ -377,15 +379,16 @@ bool Catalog::DropTable(string& _table) {
 	for(auto it = tablesList.begin(); it != tablesList.end();) {
 		tab = *it;
 		if(tab.name == _table) {
+			deleted = true;
 			it = tablesList.erase(it);
 		}
 		else {
 			it++;
-			return false;
+			//return false;
 		}
 	}
 
-	return true;
+	return deleted;
 }
 
 /* Overload printing operator for Catalog.
