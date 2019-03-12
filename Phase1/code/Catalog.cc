@@ -152,7 +152,7 @@ bool Catalog::Save() {
 		} else {
 			fprintf(stdout, "Record created successfully\n");
 		}
-	}// Table For End
+	} // Table For End
 
 	sqlite3_close(db);
 
@@ -179,14 +179,6 @@ void Catalog::SetNoTuples(string& _table, unsigned int& _noTuples) {
 			tablesList[i].noTuples = _noTuples;
 		}
 	}
-	// for (auto it = tablesList.begin(); it != tablesList.end(); it++) {
-	// 	tab = *it;
-	// 	if (tab.name == _table) {
-	// 		tab.noTuples = _noTuples;
-	// 		*it = tab;
-	// 	}
-	// }
-	
 }
 
 bool Catalog::GetDataFile(string& _table, string& _path) {
@@ -207,14 +199,6 @@ void Catalog::SetDataFile(string& _table, string& _path) {
 			tablesList[i].pathToFile = _path;
 		}
 	}
-	// TablesStruct tab;
-	// for(auto it = tablesList.begin(); it != tablesList.end(); it++) {
-	// 	tab = *it;
-	// 	if(tab.name == _table) {
-	// 		tab.pathToFile = _path;
-	// 		*it = tab;
-	// 	}
-	// }
 }
 
 bool Catalog::GetNoDistinct(string& _table, string& _attribute, unsigned int& _noDistinct) {
@@ -237,20 +221,10 @@ void Catalog::SetNoDistinct(string& _table, string& _attribute, unsigned int& _n
 		if(tablesList[i].name == _table) {
 			for(int j = 0; j < tablesList[i].schema.GetAtts().size(); ++j) {
 				if(tablesList[i].schema.GetAtts()[j].name == _attribute) 
-					tablesList[i].schema.GetAtts()[j].noDistinct == _noDistinct;
+					tablesList[i].schema.GetAtts()[j].noDistinct = _noDistinct;
 				}
 		}
 	}
-	
-	// TablesStruct tab;
-	// for(auto it = tablesList.begin(); it != tablesList.end(); ++it) {
-	// 	tab = *it;
-	// 	if(tab.name == _table) {
-	// 		int attributeLocation = tab.schema.Index(_attribute);
-	// 		tab.schema.GetAtts()[attributeLocation].noDistinct = _noDistinct;
-	// 		*it = tab;
-	// 	}
-	// }
 }
 
 void Catalog::GetTables(vector<string>& _tables) {
