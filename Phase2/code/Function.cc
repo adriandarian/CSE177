@@ -12,17 +12,16 @@
 using namespace std;
 
 
-Function :: Function () {
+Function::Function () {
 	opList = new Arithmetic[MAX_FUNCTION_DEPTH];
 }
 
-Function :: Function(const Function& _copyMe) : numOps(_copyMe.numOps),
-	returnsInt(_copyMe.returnsInt) {
+Function::Function(const Function& _copyMe) : numOps(_copyMe.numOps), returnsInt(_copyMe.returnsInt) {
 	opList = new Arithmetic[MAX_FUNCTION_DEPTH];
 	memcpy(opList, _copyMe.opList, MAX_FUNCTION_DEPTH*sizeof(Arithmetic));
 }
 
-Function& Function :: operator=(const Function& _copyMe) {
+Function& Function::operator=(const Function& _copyMe) {
 	// handle self-assignment first
 	if (this == &_copyMe) return *this;
 
@@ -34,11 +33,11 @@ Function& Function :: operator=(const Function& _copyMe) {
 	return *this;
 }
 
-Function :: ~Function () {
+Function::~Function () {
 	delete [] opList;
 }
 
-Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
+Type Function::RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 	// different cases; in the first case, simple, unary operation
 	if ((parseTree->right == NULL) && (parseTree->leftOperand == NULL) &&
 		(parseTree->code == '-')) {
@@ -50,18 +49,15 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 			opList[numOps].myOp = IntUnaryMinus;
 			numOps++;
 			return Integer;
-		}
-		else if (myType == Float) {
+		} else if (myType == Float) {
 			opList[numOps].myOp = DblUnaryMinus;
 			numOps++;
 			return Float;
-		}
-		else {
+		} else {
 			cerr << "ERROR: Unknown type in function!" << endl;
 			return Integer;
 		}
-	}
-	else if ((parseTree->leftOperator == NULL) && (parseTree->right == NULL)) {
+	} else if ((parseTree->leftOperator == NULL) && (parseTree->right == NULL)) {
 		// we have either a literal value or a variable value, so do a push
 
 		// there are two sub-cases
@@ -90,16 +86,14 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 				opList[numOps].litInput = NULL;
 				numOps++;	
 				return Integer;
-			}
-			else {
+			} else {
 				opList[numOps].myOp = PushDouble;
 				opList[numOps].recInput = myNum;
 				opList[numOps].litInput = NULL;
 				numOps++;	
 				return Float;
 			}
-		}
-		else if (parseTree->leftOperand->code == INTEGER) {
+		} else if (parseTree->leftOperand->code == INTEGER) {
 			// we were given a literal integer value!
 			opList[numOps].myOp = PushInt;
 			opList[numOps].recInput = -1;
@@ -109,8 +103,7 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 			numOps++;
 			return Integer;
 
-		}
-		else {
+		} else {
 			opList[numOps].myOp = PushDouble;
 			opList[numOps].recInput = -1;
 			opList[numOps].litInput = (void *) (new double);
@@ -119,8 +112,7 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 			numOps++;
 			return Float;
 		}
-	}
-	else {
+	} else {
 		// last is to deal with an arithmetic operator
 
 		// so first, we recursively handle the left; this should give us the left
@@ -139,23 +131,19 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 				opList[numOps].myOp = IntPlus;
 				numOps++;
 				return Integer;
-			}
-			else if (parseTree->code == '-') {
+			} else if (parseTree->code == '-') {
 				opList[numOps].myOp = IntMinus;
 				numOps++;
 				return Integer;
-			}
-			else if (parseTree->code == '*') {
+			} else if (parseTree->code == '*') {
 				opList[numOps].myOp = IntMultiply;
 				numOps++;
 				return Integer;
-			}
-			else if (parseTree->code == '/') {
+			} else if (parseTree->code == '/') {
 				opList[numOps].myOp = IntDivide;
 				numOps++;
 				return Integer;
-			}
-			else {
+			} else {
 				cerr << "ERROR: Unknown integer operator in function!" << endl;
 				return Integer;
 			}
@@ -181,23 +169,19 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 			opList[numOps].myOp = DblPlus;
 			numOps++;
 			return Float;
-		}
-		else if (parseTree->code == '-') {
+		} else if (parseTree->code == '-') {
 			opList[numOps].myOp = DblMinus;
 			numOps++;
 			return Float;
-		}
-		else if (parseTree->code == '*') {
+		} else if (parseTree->code == '*') {
 			opList[numOps].myOp = DblMultiply;
 			numOps++;
 			return Float;
-		}
-		else if (parseTree->code == '/') {
+		} else if (parseTree->code == '/') {
 			opList[numOps].myOp = DblDivide;
 			numOps++;
 			return Float;
-		}
-		else {
+		} else {
 			cerr << "ERROR: Unknown float operator in function!" << endl;
 			return Integer;
 		}
@@ -206,7 +190,7 @@ Type Function :: RecursivelyBuild (FuncOperator* parseTree, Schema& mySchema) {
 	return Integer;
 }
 
-void Function :: GrowFromParseTree (FuncOperator* parseTree, Schema& mySchema) {
+void Function::GrowFromParseTree (FuncOperator* parseTree, Schema& mySchema) {
 	// zero out the list of operations
 	numOps = 0;
 
@@ -218,7 +202,7 @@ void Function :: GrowFromParseTree (FuncOperator* parseTree, Schema& mySchema) {
 	else returnsInt = 0;
 }
 
-Type Function :: Apply (Record& toMe, int &intResult, double &doubleResult) {
+Type Function::Apply (Record& toMe, int &intResult, double &doubleResult) {
 	// this is rather simple; we just loop through and apply all of the 
 	// operations that are specified during the function
 
@@ -236,8 +220,7 @@ Type Function :: Apply (Record& toMe, int &intResult, double &doubleResult) {
 				if (opList[i].recInput >= 0) {
 					int pointer = ((int *) bits)[opList[i].recInput + 1];
 					*((int *) lastPos) = *((int *) &(bits[pointer]));
-				}
-				else {
+				} else {
 					// or from the literal value
 					*((int *) lastPos) = *((int *) opList[i].litInput);
 				}
@@ -251,8 +234,7 @@ Type Function :: Apply (Record& toMe, int &intResult, double &doubleResult) {
 				if (opList[i].recInput >= 0) {
 					int pointer = ((int *) bits)[opList[i].recInput + 1];
 					*((double *) lastPos) = *((double *) &(bits[pointer]));
-				}
-				else {
+				} else {
 					// or from the literal value
 					*((double *) lastPos) = *((double *) opList[i].litInput);
 				}
@@ -294,8 +276,7 @@ Type Function :: Apply (Record& toMe, int &intResult, double &doubleResult) {
 				break;
 			}
 			case DblPlus: {
-				*((double *) (lastPos - 1)) =
-					*((double *) (lastPos - 1)) + *((double *) lastPos);
+				*((double *) (lastPos - 1)) = *((double *) (lastPos - 1)) + *((double *) lastPos);
 				lastPos--;
 				break;
 			}
@@ -341,8 +322,7 @@ Type Function :: Apply (Record& toMe, int &intResult, double &doubleResult) {
 	if (returnsInt) {
 		intResult = *((int *) lastPos);
 		return Integer;
-	}
-	else {
+	} else {
 		doubleResult = *((double *) lastPos);
 		return Float;
 	}

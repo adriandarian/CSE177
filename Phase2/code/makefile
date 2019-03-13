@@ -7,12 +7,24 @@ ifdef linux
 endif
 
 
-main.out:	QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o DataTypeClass.o QueryOptimizer.o QueryCompiler.o main.o
-	$(CC) -o main.out main.o QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o DataTypeClass.o QueryOptimizer.o QueryCompiler.o -ll -lsqlite3
+main.out:	EfficientMap.o InefficientMap.o Keyify.o DataTypeClass.o QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o main.o
+	$(CC) -o main.out EfficientMap.o InefficientMap.o Keyify.o DataTypeClass.o main.o QueryParser.o QueryLexer.o Schema.o Record.o File.o DBFile.o Comparison.o Function.o RelOp.o Catalog.o QueryOptimizer.o QueryCompiler.o -ll -lsqlite3
 	
 main.o:	main.cc
 	$(CC) -c main.cc
-	
+
+EfficientMap.o: EfficientMap.cc	
+	$(CC) -c EfficientMap.cc
+
+InefficientMap.o: InefficientMap.cc	
+	$(CC) -c InefficientMap.cc
+
+Keyify.o: Keyify.cc	
+	$(CC) -c Keyify.cc
+
+DataTypeClass.o: DataTypeClass.cc
+	$(CC) -c DataTypeClass.cc
+
 Schema.o: Schema.cc	
 	$(CC) -c Schema.cc
 
@@ -42,9 +54,6 @@ QueryCompiler.o: Schema.cc Record.cc Comparison.cc RelOp.cc QueryOptimizer.cc Qu
 
 Catalog.o: Schema.cc Catalog.cc	
 	$(CC) -c Catalog.cc
-
-DataTypeClass.o: DataTypeClass.cc
-	$(CC) -c DataTypeClass.cc
 
 QueryParser.o: QueryParser.y
 	yacc --defines=QueryParser.h -o QueryParser.c QueryParser.y

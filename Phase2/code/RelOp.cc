@@ -21,7 +21,7 @@ Scan::~Scan() {
 }
 
 ostream& Scan::print(ostream& _os) {
-	_os << "SCAN [ " << tblName << " ]" << endl;
+	_os << "SCAN [ " << tblName << " ]";
 	return _os;
 }
 
@@ -48,16 +48,7 @@ ostream& Select::print(ostream& _os) {
 	}
 
 	output += " }; predicate : { ";
-
-	for (auto i = 0; i < schema.GetNumAtts(); i++) { // TODO: change to loop through list of clauses
-		if (i == schema.GetNumAtts() - 1) {
-				output += " " + schema.GetAtts()[i].name;
-			}
-		output += " " + schema.GetAtts()[i].name + " < " + to_string(10) + " AND "; // TODO: change to apply `attribute` + `operator` + `constant`
-	}
-
-	output += "} ]";
-	return _os << output << endl;
+	return _os << output << predicate << "} ]";
 }
 
 
@@ -94,7 +85,7 @@ ostream& Project::print(ostream& _os) {
 	}
 
 	output += " } ]";
-	return _os << output << endl;
+	return _os << output;
 }
 
 
@@ -131,7 +122,7 @@ ostream& Join::print(ostream& _os) {
 	}
 
 	output += " } ]";
-	return _os << output << endl;
+	return _os << output;
 }
 
 
@@ -155,7 +146,7 @@ ostream& DuplicateRemoval::print(ostream& _os) {
 	}
 
 	output += " } ]";
-	return _os << output << endl;
+	return _os << output;
 }
 
 
@@ -169,13 +160,23 @@ Sum::Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute, RelationalOp
 Sum::~Sum() {
 
 }
+
 // SUM [ F : l_extendedprice * l_discount; sIN : { l_orderkey, … }; sOUT : { SUM : FLOAT } ] 
 ostream& Sum::print(ostream& _os) {
 	string output = "SUM [ F : {";
-	// for (auto i = 0; i < numAttsInput; i++) {
-	// 	output += " " + schemaIn.GetAtts()[i].name + ",";
-	// }
-	return _os << output << endl;
+
+	//output += " " + to_string(compute) + " ";
+	output += "; sIN : {";
+
+	for (auto i = 0; i < schemaIn.GetNumAtts(); i++) {
+		if (i == schemaIn.GetNumAtts() - 1) {
+			output += " " + schemaIn.GetAtts()[i].name;
+		}
+		output += " " + schemaIn.GetAtts()[i].name + ",";
+	}
+
+	// output += "}; sOUT : {" + schemaOut.FindType(compute) + " } ]";
+	return _os << output;
 }
 
 
@@ -192,7 +193,7 @@ ostream& GroupBy::print(ostream& _os) {
 	// for (auto i = 0; i < numAttsInput; i++) {
 	// 	output += " " + schemaIn.GetAtts()[i].name + ",";
 	// }
-	return _os << output << endl;
+	return _os << output;
 }
 
 
