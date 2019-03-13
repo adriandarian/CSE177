@@ -23,18 +23,43 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
 	NameList* _groupingAtts, int& _distinctAtts,
 	QueryExecutionTree& _queryTree) {
 
-	TableList *tables = _tables;
 	// create a SCAN operator for each table in the query
-	while(_tables != NULL) {
-		string tableName, pathToFile;
-		Schema schema;
-		DBFile tempDB;
-		tableName = (tables->tableName);
-		catalog->GetSchema(tableName, schema);
-		catalog->GetDataFile(tableName, pathToFile);
+	int nTbl = 0;
+	for (TableList* node = _tables; node != NULL; node = node->next) nTbl += 1;
 
+	RelationalOp** forest = new RelationalOp*[nTbl];
+	Schema* forestSchema = new Schema[nTbl];
+	int idx = 0;
+	for (TableList* node = _tables; node != NULL; node = node->next) {
+		string s = node->tableName;
+		bool b = catalog->GetSchema(s, forestSchema[idx]);
+		if (false == b) {
+			cout << "Semantic error: table " << s << " does not exist in the database!" << endl;
+			exit(1);
+		}
+
+		DBFile dbFile;
+		forest[idx] = new Scan(forestSchema[idx], dbFile, s);
+		idx += 1;
 	}
+	
+	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+
+
+
 	// push-down selections: create a SELECT operator wherever necessary
+	for (int i = 0; i < nTbl; i++) {
+		Record literal;
+		CNF cnf;
+		int ret = cnf.ExtractCNF (*_predicate, forestSchema[i], literal);
+		if (0 != ret) exit(1);
+
+		RelationalOp* op = new Select(forestSchema[i], cnf, literal, forest[i]);
+		forest[i] = op;
+	}
+
+	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+
 
 	// call the optimizer to compute the join order
 	OptimizationTree* root;
