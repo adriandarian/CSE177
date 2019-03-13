@@ -133,7 +133,7 @@ char *Record::GetColumn(int which_column) {
 	return position;
 }
 
-int Record ::GetSize() {
+int Record::GetSize() {
 	if (bits == NULL) {
 		return 0;
 	} else {

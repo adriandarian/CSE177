@@ -48,7 +48,8 @@ ostream& Select::print(ostream& _os) {
 	}
 
 	output += " }; predicate : { ";
-	return _os << output << predicate << "} ]";
+	//return _os << output << predicate << "} ]";
+	return _os << "SELECT <- " << *producer << " : " << predicate << " :: " ;
 }
 
 
@@ -163,10 +164,7 @@ Sum::~Sum() {
 
 // SUM [ F : l_extendedprice * l_discount; sIN : { l_orderkey, … }; sOUT : { SUM : FLOAT } ] 
 ostream& Sum::print(ostream& _os) {
-	string output = "SUM [ F : {";
-
-	//output += " " + to_string(compute) + " ";
-	output += "; sIN : {";
+	string output = "; sIN : {";
 
 	for (auto i = 0; i < schemaIn.GetNumAtts(); i++) {
 		if (i == schemaIn.GetNumAtts() - 1) {
@@ -175,8 +173,14 @@ ostream& Sum::print(ostream& _os) {
 		output += " " + schemaIn.GetAtts()[i].name + ",";
 	}
 
-	// output += "}; sOUT : {" + schemaOut.FindType(compute) + " } ]";
-	return _os << output;
+	for (auto i = 0; i < schemaIn.GetNumAtts(); i++) {
+		if (i == schemaIn.GetNumAtts() - 1) {
+			output += "}; sOUT : {" + to_string(schemaOut.GetAtts()[i].type);
+		}
+		output += "}; sOUT : {" + to_string(schemaOut.GetAtts()[i].type) + " } ]";
+	}
+	
+	return _os << "SUM [ F : {" << output;
 }
 
 

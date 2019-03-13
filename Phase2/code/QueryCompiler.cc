@@ -18,14 +18,13 @@ QueryCompiler::QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer) :
 QueryCompiler::~QueryCompiler() {
 }
 
-void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect,
-	FuncOperator* _finalFunction, AndList* _predicate,
-	NameList* _groupingAtts, int& _distinctAtts,
-	QueryExecutionTree& _queryTree) {
+void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect, FuncOperator* _finalFunction, AndList* _predicate, NameList* _groupingAtts, int& _distinctAtts, QueryExecutionTree& _queryTree) {
 
 	// create a SCAN operator for each table in the query
 	int nTbl = 0;
-	for (TableList* node = _tables; node != NULL; node = node->next) nTbl += 1;
+	for (TableList* node = _tables; node != NULL; node = node->next) {
+		nTbl += 1;
+	}
 
 	RelationalOp** forest = new RelationalOp*[nTbl];
 	Schema* forestSchema = new Schema[nTbl];
