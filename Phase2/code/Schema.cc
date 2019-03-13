@@ -1,93 +1,178 @@
-#ifndef _SCHEMA_H
-#define _SCHEMA_H
-
-#include <string>
-#include <vector>
 #include <iostream>
 #include "Config.h"
+#include "Swap.h"
+#include "Schema.h"
 
 using namespace std;
 
 
-/* Data structure for schema attributes:
- * name of attribute
- * type of attribute
- * number of distinct values
- */
-class Attribute {
-public:
-	string name;
-	Type type;
-	unsigned int noDistinct;
+Attribute::Attribute() : name(""), type(Name), noDistinct(0) {}
 
-	// constructors and destructor
-	Attribute();
-	Attribute(const Attribute& _other);
-	Attribute& operator=(const Attribute& _other);
-	void Swap(Attribute& _other);
+Attribute::Attribute(const Attribute& _other) :
+	name(_other.name), type(_other.type), noDistinct(_other.noDistinct) {}
 
-	virtual ~Attribute() {}
-};
+Attribute& Attribute::operator=(const Attribute& _other) {
+	// handle self-assignment first
+	if (this == &_other) return *this;
+
+	name = _other.name;
+	type = _other.type;
+	noDistinct = _other.noDistinct;
+
+	return *this;
+}
+
+void Attribute::Swap(Attribute& _other) {
+	STL_SWAP(name, _other.name);
+	SWAP(type, _other.type);
+	SWAP(noDistinct, _other.noDistinct);
+}
 
 
-/* Class to manage schema of relations:
- * materialized on disk
- * intermediate result during query execution
- */
-class Schema {
-private:
-	// attributes in schema
-	vector<Attribute> atts;
+Schema::Schema(vector<string>& _attributes,	vector<string>& _attributeTypes,
+	vector<unsigned int>& _distincts) {
+	for (int i = 0; i < _attributes.size(); i++) {
+		Attribute a;
+		a.name = _attributes[i];
+		a.noDistinct = _distincts[i];
+		if (_attributeTypes[i] == "INTEGER") a.type = Integer;
+		else if (_attributeTypes[i] == "FLOAT") a.type = Float;
+		else if (_attributeTypes[i] == "STRING") a.type = String;
+		
+		atts.push_back(a);
+	}
+}
 
-public:
-	// default constructor
-	Schema() {}
-	// full constructor
-	Schema(vector<string>& _attributes,	vector<string>& _attributeTypes,
-		vector<unsigned int>& _distincts);
-	// copy constructor
-	Schema(const Schema& _other);
-	// assignment operator
-	Schema& operator=(const Schema& _other);
-	// swap function
-	void Swap(Schema& _other);
+Schema::Schema(const Schema& _other) {
+	for (int i = 0; i < _other.atts.size(); i++) {
+		Attribute a; a = _other.atts[i];
+		atts.push_back(a);
+	}
+}
 
-	// destructor
-	virtual ~Schema() {atts.clear();}
+Schema& Schema::operator=(const Schema& _other) {
+	// handle self-assignment first
+	if (this == &_other) return *this;
 
-	// get functions
-	unsigned int GetNumAtts() {return atts.size();}
-	vector<Attribute>& GetAtts() {return atts;}
+	for (int i = 0; i < _other.atts.size(); i++) {
+		Attribute a; a = _other.atts[i];
+		atts.push_back(a);
+	}
 
-	// append other schema
-	int Append(Schema& _other);
+	return *this;
+}
 
-	// find index of specified attribute
-	// return -1 if attribute is not present
-	int Index(string& _attName);
+void Schema::Swap(Schema& _other) {
+	atts.swap(_other.atts);
+}
 
-	// find number of distincts of specified attribute
-	// return -1 if attribute is not present
-	int GetDistincts(string& _attName);
+int Schema::Append(Schema& _other) {
+	for (int i = 0; i < _other.atts.size(); i++) {
+		int pos = Index(_other.atts[i].name);
+		if (pos != -1) return -1;
+	}
 
-	// rename an attribute
-	int RenameAtt(string& _oldName, string& _newName);
+	for (int i = 0; i < _other.atts.size(); i++) {
+		Attribute a; a = _other.atts[i];
+		atts.push_back(a);
+	}
 
-	// project attributes of a schema
-	// only attributes indexed in the input vector are kept after projection
-	// index begins from 0
-	// return -1 if failure, 0 otherwise
-	int Project(vector<int>& _attsToKeep);
+	return 0;
+}
 
-	// find type of the specified attribute
-	// return arbitrary type if attribute is not present
-	// call only after Index returns valid result
-	Type FindType(string& _attName);
+int Schema::Index(string& _attName) {
+	for (int i = 0; i < atts.size(); i++) {
+		if (_attName == atts[i].name) return i;
+	}
 
-	void Clear();
+	// if we made it here, the attribute was not found
+	return -1;
+}
 
-	// operator for printing
-	friend ostream& operator<<(ostream& _os, Schema& _c);
-};
+Type Schema::FindType(string& _attName) {
+	int pos = Index(_attName);
+	if (pos == -1) return Integer;
 
-#endif //_SCHEMA
+	return atts[pos].type;
+}
+
+int Schema::GetDistincts(string& _attName) {
+	int pos = Index(_attName);
+	if (pos == -1) return -1;
+
+	return atts[pos].noDistinct;
+}
+
+int Schema::RenameAtt(string& _oldName, string& _newName) {
+	int pos = Index(_newName);
+	if (pos != -1) return -1;
+
+	pos = Index(_oldName);
+	if (pos == -1) return -1;
+
+
+	atts[pos].name = _newName;
+
+	return 0;
+}
+
+int Schema::Project(vector<int>& _attsToKeep) {
+	int numAttsToKeep = _attsToKeep.size();
+	int numAtts = atts.size();
+	
+	// too many attributes to keep
+	if (numAttsToKeep > numAtts) return -1;
+
+	vector<Attribute> copy; atts.swap(copy);
+
+	for (int i=0; i<numAttsToKeep; i++) {
+		int index = _attsToKeep[i];
+		if ((index >= 0) && (index < numAtts)) {
+			Attribute a; a = copy[index];
+			atts.push_back(a);
+		}
+		else {
+			atts.swap(copy);
+			copy.clear();
+
+			return -1;
+		}
+	}
+
+	copy.clear();
+
+	return 0;
+}
+
+void Schema::Clear() {
+	atts.clear();
+}
+
+
+ostream& operator<<(ostream& _os, Schema& _c) {
+	_os << "(";
+	for(int i=0; i<_c.atts.size(); i++) {
+		_os << _c.atts[i].name << ':';
+
+		switch(_c.atts[i].type) {
+			case Integer:
+				_os << "INTEGER";
+				break;
+			case Float:
+				cout << "FLOAT";
+				break;
+			case String:
+				cout << "STRING";
+				break;
+			default:
+				cout << "UNKNOWN";
+				break;
+		}
+
+		_os << " [" << _c.atts[i].noDistinct << "]";
+		if (i < _c.atts.size()-1) _os << ", ";
+	}
+	_os << ")";
+
+	return _os;
+}
