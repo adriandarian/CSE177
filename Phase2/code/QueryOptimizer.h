@@ -37,7 +37,7 @@ public:
 	virtual ~QueryOptimizer();
 
 	void Optimize(TableList* _tables, AndList* _predicate, OptimizationTree* _root);
-	void BuildTree(TableList* _tables, OptimizationTree* _root, vector<string> tabs);
+	OptimizationTree* BuildTree(TableList* _tables, OptimizationTree* _root, vector<string> tabs);
 };
 
 #endif // _QUERY_OPTIMIZER_H

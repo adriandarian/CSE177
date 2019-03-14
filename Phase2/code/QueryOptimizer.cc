@@ -29,15 +29,17 @@ void QueryOptimizer::Optimize(TableList* _tables, AndList* _predicate, Optimizat
 	int noTuples = 0;
 	TableList* tablesList = _tables;
 	vector<string> tables;
+	OptimizationTree* temp = new OptimizationTree;
 
 	for (TableList* node = _tables; node != NULL; node = node->next) {	
 		nTbl += 1;
 		tables.push_back(string(node->tableName));
 	}
-	BuildTree(_tables, _root, tables);
+	temp = BuildTree(_tables, _root, tables);
+	*_root = *temp;
 }
 
-void QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vector<string> tabs) {
+OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vector<string> tabs) {
 	vector<string> tables; 
 	tables = tabs;
 	OptimizationTree* root = _root;
@@ -45,6 +47,7 @@ void QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vect
 
 	if(tabs.size() == 0) {
 		_root = NULL;
+		return _root;
 	}
 	else {
 		//Initialize
@@ -54,7 +57,7 @@ void QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vect
 		//Push back for children
 		node->tables.push_back(tables[0]);
 		//TODO: Better way to do this?
-		if(tables.size == 1) {
+		if(tables.size() == 1) {
 			node->leftChild = NULL;
 			node->rightChild = NULL;
 			*_root = *node;
@@ -95,8 +98,7 @@ void QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vect
 				node = tempN;
 				
 			}
-			
-			*_root = *node;
 		}
+		return node;
 	}
 }
