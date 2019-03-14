@@ -4,7 +4,11 @@
     "c11"
   ],
   "cSpell.words": [
-    "swapify"
+    "destroy",
+    "keepme",
+    "swapify",
+    "yylex",
+    "yyparse"
   ],
   "files.associations": {
     "*.html": "html",

@@ -26,10 +26,9 @@ public:
 	QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer);
 	virtual ~QueryCompiler();
 
-	void Compile(TableList* _tables, NameList* _attsToSelect,
-		FuncOperator* _finalFunction, AndList* _predicate,
-		NameList* _groupingAtts, int& _distinctAtts,
-		QueryExecutionTree& _queryTree);
+	void Compile(TableList* _tables, NameList* _attsToSelect, FuncOperator* _finalFunction, AndList* _predicate, NameList* _groupingAtts, int& _distinctAtts, QueryExecutionTree& _queryTree);
+
+	RelationalOp* constTree(OptimizationTree* root, AndList* _predicate);
 };
 
 #endif // _QUERY_COMPILER_H

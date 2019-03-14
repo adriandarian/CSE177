@@ -2,6 +2,7 @@
 #define _REL_OP_H
 
 #include <iostream>
+#include <fstream>
 
 #include "Schema.h"
 #include "Record.h"
@@ -27,14 +28,15 @@ public:
 	// every operator has to implement this method
 	virtual bool GetNext(Record& _record) = 0;
 
+	virtual void returnSchema(Schema& _schema) = 0;
+
 	/* Virtual function for polymorphic printing using operator<<.
 	 * Each operator has to implement its specific version of print.
 	 */
-    virtual ostream& print(ostream& _os) = 0;
+	virtual ostream& print(ostream& _os) = 0;
 
-    /* Overload operator<< for printing.
-     */
-    friend ostream& operator<<(ostream& _os, RelationalOp& _op);
+	// Overload operator<< for printing.
+	friend ostream& operator<<(ostream& _os, RelationalOp& _op);
 };
 
 class Scan : public RelationalOp {
@@ -54,6 +56,8 @@ public:
 
 	virtual bool GetNext(Record& _record) {}
 
+	virtual void returnSchema (Schema& _schema){_schema = schema;}
+
 	virtual ostream& print(ostream& _os);
 };
 
@@ -71,11 +75,12 @@ private:
 	RelationalOp* producer;
 
 public:
-	Select(Schema& _schema, CNF& _predicate, Record& _constants,
-		RelationalOp* _producer);
+	Select(Schema& _schema, CNF& _predicate, Record& _constants, RelationalOp* _producer);
 	virtual ~Select();
 
 	virtual bool GetNext(Record& _record) {}
+
+	virtual void returnSchema (Schema & _schema){_schema = schema;}
 
 	virtual ostream& print(ostream& _os);
 };
@@ -99,11 +104,12 @@ private:
 	RelationalOp* producer;
 
 public:
-	Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput,
-		int _numAttsOutput, int* _keepMe, RelationalOp* _producer);
+	Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput, int _numAttsOutput, int* _keepMe, RelationalOp* _producer);
 	virtual ~Project();
 
 	virtual bool GetNext(Record& _record) {}
+
+	virtual void returnSchema(Schema& _schema){_schema = schemaOut;}
 
 	virtual ostream& print(ostream& _os);
 };
@@ -125,11 +131,12 @@ private:
 	RelationalOp* right;
 
 public:
-	Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
-		CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
+	Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut, CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
 	virtual ~Join();
 
 	virtual bool GetNext(Record& _record) {}
+
+	virtual void returnSchema(Schema& _schema){_schema = schemaOut;}
 
 	virtual ostream& print(ostream& _os);
 };
@@ -148,6 +155,8 @@ public:
 
 	virtual bool GetNext(Record& _record) {}
 
+	virtual void returnSchema(Schema& _schema){_schema = schema;}
+
 	virtual ostream& print(ostream& _os);
 };
 
@@ -165,11 +174,12 @@ private:
 	RelationalOp* producer;
 
 public:
-	Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
-		RelationalOp* _producer);
+	Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute, RelationalOp* _producer);
 	virtual ~Sum();
 
 	virtual bool GetNext(Record& _record) {}
+
+	virtual void returnSchema(Schema& _schema){_schema = schemaOut;}
 
 	virtual ostream& print(ostream& _os);
 };
@@ -196,6 +206,8 @@ public:
 
 	virtual bool GetNext(Record& _record) {}
 
+	virtual void returnSchema(Schema& _schema){_schema = schemaOut;}
+
 	virtual ostream& print(ostream& _os);
 };
 
@@ -210,11 +222,16 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
+	// generate file to write to
+	ofstream myFile;
+
 public:
 	WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer);
 	virtual ~WriteOut();
 
 	virtual bool GetNext(Record& _record) {}
+
+	virtual void returnSchema(Schema& _schema){_schema = schema;}
 
 	virtual ostream& print(ostream& _os);
 };
@@ -231,7 +248,7 @@ public:
 	void ExecuteQuery() {}
 	void SetRoot(RelationalOp& _root) {root = &_root;}
 
-    friend ostream& operator<<(ostream& _os, QueryExecutionTree& _op);
+  friend ostream& operator<<(ostream& _os, QueryExecutionTree& _op);
 };
 
 #endif //_REL_OP_H

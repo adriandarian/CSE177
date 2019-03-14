@@ -201,7 +201,10 @@ ostream& GroupBy::print(ostream& _os) {
 
 
 WriteOut::WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer) {
-
+	schema = _schema;
+	outFile = _outFile;
+	producer = _producer;
+	myFile.open (&outFile[0]);
 }
 
 WriteOut::~WriteOut() {
@@ -209,7 +212,7 @@ WriteOut::~WriteOut() {
 }
 
 ostream& WriteOut::print(ostream& _os) {
-	return _os << "OUTPUT";
+	return _os << "OUTPUT:\n{\n\t" << *producer <<"\n}\n";
 }
 
 
