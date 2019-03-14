@@ -5,3 +5,4 @@ QueryLexer.c
 QueryParser.c
 QueryParser.c-e
 QueryParser.h
+makefile

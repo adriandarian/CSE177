@@ -22,7 +22,9 @@ Comparison::Comparison(const Comparison& copy_me) :
 
 Comparison& Comparison::operator=(const Comparison& copy_me) {
 	// handle self-assignment first
-	if (this == &copy_me) return *this;
+	if (this == &copy_me) {
+		return *this;
+	}
 
 	operand1 = copy_me.operand1; whichAtt1 = copy_me.whichAtt1;
 	operand2 = copy_me.operand2; whichAtt2 = copy_me.whichAtt2;
@@ -40,7 +42,7 @@ void Comparison::Swap(Comparison& _swap) {
 	SWAP(op, _swap.op);
 }
 
-bool Comparison :: Run (Record& left, Record& right) {
+bool Comparison::Run (Record& left, Record& right) {
 	char* val1 = NULL;
 	char* val2 = NULL;
 
@@ -48,12 +50,18 @@ bool Comparison :: Run (Record& left, Record& right) {
 	char* lit_bits = right.GetBits();
 
 	// first get a pointer to the first value to compare
-	if (operand1 == Left) val1 = left_bits + ((int *) left_bits)[whichAtt1 + 1];
-	else val1 = lit_bits + ((int *) lit_bits)[whichAtt1 + 1];
+	if (operand1 == Left) {
+		val1 = left_bits + ((int *) left_bits)[whichAtt1 + 1];
+	} else {
+		val1 = lit_bits + ((int *) lit_bits)[whichAtt1 + 1];
+	}
 
 	// next get a pointer to the second value to compare
-	if (operand2 == Left) val2 = left_bits + ((int *) left_bits)[whichAtt2 + 1];
-	else val2 = lit_bits + ((int *) lit_bits)[whichAtt2 + 1];
+	if (operand2 == Left) {
+		val2 = left_bits + ((int *) left_bits)[whichAtt2 + 1];
+	} else {
+		val2 = lit_bits + ((int *) lit_bits)[whichAtt2 + 1];
+	}
 
 	int val1Int, val2Int, tempResult;
 	double val1Double, val2Double;
@@ -98,30 +106,46 @@ bool Comparison :: Run (Record& left, Record& right) {
 }
 
 ostream& operator<<(ostream& _os, Comparison& _c) {
-	if (_c.operand1 == Left) _os << "Left[" << _c.whichAtt1 << "]";
-	else if (_c.operand1 == Right) _os << "Right[" << _c.whichAtt1 << "]";
-	else _os << "Const";
+	if (_c.operand1 == Left) {
+		_os << "Left[" << _c.whichAtt1 << "]";
+	} else if (_c.operand1 == Right) {
+		_os << "Right[" << _c.whichAtt1 << "]";
+	} else {
+		_os << "Const";
+	}
 
-	if (_c.op == LessThan) _os << " < ";
-	else if (_c.op == GreaterThan) _os << " > ";
-	else _os << " = ";
+	if (_c.op == LessThan) {
+		_os << " < ";
+	} else if (_c.op == GreaterThan) {
+		_os << " > ";
+	} else {
+		_os << " = ";
+	}
 
-	if (_c.operand2 == Left) _os << "Left[" << _c.whichAtt2 << "]";
-	else if (_c.operand2 == Right) _os << "Right[" << _c.whichAtt2 << "]";
-	else _os << "Const";
+	if (_c.operand2 == Left) {
+		_os << "Left[" << _c.whichAtt2 << "]";
+	} else if (_c.operand2 == Right) {
+		_os << "Right[" << _c.whichAtt2 << "]";
+	} else {
+		_os << "Const";
+	}
 
-	if (_c.attType == Integer)	_os << " (Integer)";
-	else if (_c.attType == Float) _os << " (Float)";
-	else _os << " (String)";
+	if (_c.attType == Integer) {
+		_os << " (Integer)";
+	} else if (_c.attType == Float) {
+		_os << " (Float)";
+	} else {
+		_os << " (String)";
+	}
 
 	return _os;
 }
 
 
 
-OrderMaker :: OrderMaker() : numAtts(0) {}
+OrderMaker::OrderMaker() : numAtts(0) {}
 
-OrderMaker :: OrderMaker(const OrderMaker& _o) : numAtts(_o.numAtts) {
+OrderMaker::OrderMaker(const OrderMaker& _o) : numAtts(_o.numAtts) {
 	memcpy(whichAtts, _o.whichAtts, _o.numAtts*sizeof(int));
 	memcpy(whichTypes, _o.whichTypes, _o.numAtts*sizeof(Type));
 }
@@ -152,7 +176,7 @@ void OrderMaker::Swap(OrderMaker& _swap) {
 	SWAP(numAtts, _swap.numAtts);
 }
 
-OrderMaker :: OrderMaker(Schema& schema) : numAtts(0) {
+OrderMaker::OrderMaker(Schema& schema) : numAtts(0) {
 	unsigned int n = schema.GetNumAtts();
 	vector<Attribute> atts = schema.GetAtts();
 
@@ -184,7 +208,7 @@ OrderMaker :: OrderMaker(Schema& schema) : numAtts(0) {
 	}
 }
 
-OrderMaker :: OrderMaker(Schema& schema, int* _atts, int _atts_no) {
+OrderMaker::OrderMaker(Schema& schema, int* _atts, int _atts_no) {
 	numAtts = _atts_no;
 	vector<Attribute> atts = schema.GetAtts();
 
@@ -208,6 +232,7 @@ void OrderMaker::ANDMerge(OrderMaker& om1, OrderMaker& om2) {
 				break;
 			}
 		}
+
 		//attribute is not appearing in om1
 		if (found == false)	{
 			whichAtts[numAtts] = om2.whichAtts[i];
@@ -217,7 +242,7 @@ void OrderMaker::ANDMerge(OrderMaker& om1, OrderMaker& om2) {
 	}
 }
 
-int OrderMaker :: Run(Record& left, Record& right) {
+int OrderMaker::Run(Record& left, Record& right) {
 	char *val1, *val2;
 
 	char* left_bits = left.GetBits();
@@ -267,7 +292,7 @@ int OrderMaker :: Run(Record& left, Record& right) {
 	return 0;
 }
 
-int OrderMaker :: Run (Record& left, Record& right, OrderMaker& orderRight) {
+int OrderMaker::Run (Record& left, Record& right, OrderMaker& orderRight) {
 	char *val1, *val2;
 
 	char* left_bits = left.GetBits();
@@ -343,7 +368,9 @@ CNF::CNF(const CNF& _copy) : numAnds(_copy.numAnds) {
 
 CNF& CNF::operator=(const CNF& _o) {
 	// handle self-assignment first
-	if (this == &_o) return *this;
+	if (this == &_o) {
+		return *this;
+	}
 
 	memcpy(andList, _o.andList, _o.numAnds*sizeof(Comparison));
 	numAnds = _o.numAnds;
@@ -352,13 +379,14 @@ CNF& CNF::operator=(const CNF& _o) {
 }
 
 void CNF::Swap(CNF& _swap) {
-	for (int i = 0; i < MAX_ANDS; i++)
+	for (int i = 0; i < MAX_ANDS; i++) {
 		andList[i].Swap(_swap.andList[i]);
+	}
 
 	SWAP(numAnds, _swap.numAnds);
 }
 
-int CNF :: GetSortOrders (OrderMaker& left, OrderMaker& right) {
+int CNF::GetSortOrders (OrderMaker& left, OrderMaker& right) {
 	// initialize the size of the OrderMakers
 	left.numAtts = 0;
 	right.numAtts = 0;
@@ -379,8 +407,7 @@ int CNF :: GetSortOrders (OrderMaker& left, OrderMaker& right) {
 		if (andList[i].operand1 == Left) {
 			left.whichAtts[left.numAtts] = andList[i].whichAtt1;
 			left.whichTypes[left.numAtts] = andList[i].attType;
-		}
-		else if (andList[i].operand1 == Right) {
+		} else if (andList[i].operand1 == Right) {
 			right.whichAtts[right.numAtts] = andList[i].whichAtt1;
 			right.whichTypes[right.numAtts] = andList[i].attType;
 		}
@@ -388,8 +415,7 @@ int CNF :: GetSortOrders (OrderMaker& left, OrderMaker& right) {
 		if (andList[i].operand2 == Left) {
 			left.whichAtts[left.numAtts] = andList[i].whichAtt2;
 			left.whichTypes[left.numAtts] = andList[i].attType;
-		}
-		else if (andList[i].operand2 == Right) {
+		} else if (andList[i].operand2 == Right) {
 			right.whichAtts[right.numAtts] = andList[i].whichAtt2;
 			right.whichTypes[right.numAtts] = andList[i].attType;
 		}
@@ -442,8 +468,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 				andList[numAnds].whichAtt1 = leftIdx;
 				typeLeft = schema.FindType(s);
 			}
-		}
-		else if (currCond->left->left->code == STRING) {
+		} else if (currCond->left->left->code == STRING) {
 			// the next thing is to see if we have a string; if so, add it to the
 			// literal record that stores all of the comparison values
 			andList[numAnds].operand1 = Literal;
@@ -461,8 +486,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
-		}
-		else if (currCond->left->left->code == INTEGER) {
+		} else if (currCond->left->left->code == INTEGER) {
 			// see if it is an integer
 			andList[numAnds].operand1 = Literal;
 			andList[numAnds].whichAtt1 = numFieldsInLiteral;
@@ -475,8 +499,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
-		}
-		else if (currCond->left->left->code == FLOAT) {
+		} else if (currCond->left->left->code == FLOAT) {
 			// see if it is a double
 			andList[numAnds].operand1 = Literal;
 			andList[numAnds].whichAtt1 = numFieldsInLiteral;
@@ -489,8 +512,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
-		}
-		else {
+		} else {
 			// catch-all case
 			cerr << "ERROR: Unknown type for " << currCond->left->left->value << "!" << endl;
 			return -1;
@@ -510,8 +532,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 				andList[numAnds].whichAtt2 = leftIdx;
 				typeRight = schema.FindType(s);
 			}
-		}
-		else if (currCond->left->right->code == STRING) {
+		} else if (currCond->left->right->code == STRING) {
 			// the next thing is to see if we have a string; if so, add it to the
 			// literal record that stores all of the comparison values
 			andList[numAnds].operand2 = Literal;
@@ -529,8 +550,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
-		}
-		else if (currCond->left->right->code == INTEGER) {
+		} else if (currCond->left->right->code == INTEGER) {
 			// see if it is an integer
 			andList[numAnds].operand2 = Literal;
 			andList[numAnds].whichAtt2 = numFieldsInLiteral;
@@ -543,8 +563,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
-		}
-		else if (currCond->left->right->code == FLOAT) {
+		} else if (currCond->left->right->code == FLOAT) {
 			// see if it is a double
 			andList[numAnds].operand2 = Literal;
 			andList[numAnds].whichAtt2 = numFieldsInLiteral;
@@ -557,8 +576,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
-		}
-		else {
+		} else {
 			// catch-all case
 			cerr << "ERROR: Unknown type for " << currCond->left->right->value << "!" << endl;
 			return -1;
@@ -567,8 +585,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 
 		// now we check to make sure that there was not a type mismatch
 		if (typeLeft != typeRight) {
-			cerr << "ERROR: Type mismatch for " << currCond->left->left->value
-				<< " AND "	<< currCond->left->right->value << "!" << endl;
+			cerr << "ERROR: Type mismatch for " << currCond->left->left->value << " AND "	<< currCond->left->right->value << "!" << endl;
 			return -1;
 		}
 
@@ -576,12 +593,14 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 		andList[numAnds].attType = typeLeft;
 
 		// and finally set up the comparison operator for this comparison
-		if (currCond->left->code == LESS_THAN) andList[numAnds].op = LessThan;
-		else if (currCond->left->code == GREATER_THAN) andList[numAnds].op = GreaterThan;
-		else if (currCond->left->code == EQUALS) andList[numAnds].op = Equals;
-		else {
-			cerr << "ERROR: Unknown comparison operator for " << currCond->left->left->value
-					<< " AND "	<< currCond->left->right->value << "!" << endl;
+		if (currCond->left->code == LESS_THAN) {
+			andList[numAnds].op = LessThan;
+		} else if (currCond->left->code == GREATER_THAN) {
+			andList[numAnds].op = GreaterThan;
+		} else if (currCond->left->code == EQUALS) {
+			andList[numAnds].op = Equals;
+		} else {
+			cerr << "ERROR: Unknown comparison operator for " << currCond->left->left->value << " AND "	<< currCond->left->right->value << "!" << endl;
 			return -1;
 		}
 
@@ -592,8 +611,9 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 	// create the literal record
 	char* recComplete = new char[(numFieldsInLiteral+1)*sizeof(int)+recSize];
 	((int*) recComplete)[0] = (numFieldsInLiteral+1)*sizeof(int)+recSize;
-	for (int i = 0; i < numFieldsInLiteral; i++)
+	for (int i = 0; i < numFieldsInLiteral; i++) {
 		((int*) recComplete)[i+1] = (numFieldsInLiteral+1)*sizeof(int)+attStart[i];
+	}
 	memcpy(recComplete+(numFieldsInLiteral+1)*sizeof(int), recBits, recSize);
 
 	literal.Consume(recComplete);
@@ -628,8 +648,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 			andList[numAnds].operand1 = Left;
 			andList[numAnds].whichAtt1 = leftIdx;
 			typeLeft = leftSchema.FindType(s);
-		}
-		else {
+		} else {
 			int rightIdx = rightSchema.Index(s);
 			andList[numAnds].operand1 = Right;
 			andList[numAnds].whichAtt1 = rightIdx;
@@ -642,8 +661,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 			andList[numAnds].operand2 = Left;
 			andList[numAnds].whichAtt2 = leftIdx;
 			typeLeft = leftSchema.FindType(s);
-		}
-		else {
+		} else {
 			int rightIdx = rightSchema.Index(s);
 			andList[numAnds].operand2 = Right;
 			andList[numAnds].whichAtt2 = rightIdx;
@@ -652,8 +670,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 
 		// now we check to make sure that there was not a type mismatch
 		if (typeLeft != typeRight) {
-			cerr << "ERROR: Type mismatch for " << currCond->left->left->value
-				<< " AND "	<< currCond->left->right->value << "!" << endl;
+			cerr << "ERROR: Type mismatch for " << currCond->left->left->value << " AND "	<< currCond->left->right->value << "!" << endl;
 			return -1;
 		}
 
@@ -661,12 +678,14 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 		andList[numAnds].attType = typeLeft;
 
 		// and finally set up the comparison operator for this comparison
-		if (currCond->left->code == LESS_THAN) andList[numAnds].op = LessThan;
-		else if (currCond->left->code == GREATER_THAN) andList[numAnds].op = GreaterThan;
-		else if (currCond->left->code == EQUALS) andList[numAnds].op = Equals;
-		else {
-			cerr << "ERROR: Unknown comparison operator for " << currCond->left->left->value
-					<< " AND "	<< currCond->left->right->value << "!" << endl;
+		if (currCond->left->code == LESS_THAN) {
+			andList[numAnds].op = LessThan;
+		} else if (currCond->left->code == GREATER_THAN) {
+			andList[numAnds].op = GreaterThan;
+		} else if (currCond->left->code == EQUALS) {
+			andList[numAnds].op = Equals;
+		} else {
+			cerr << "ERROR: Unknown comparison operator for " << currCond->left->left->value << " AND "	<< currCond->left->right->value << "!" << endl;
 			return -1;
 		}
 
@@ -677,10 +696,12 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 	return 0;
 }
 
-bool CNF :: Run (Record& left, Record& right) {
+bool CNF::Run (Record& left, Record& right) {
 	for (int i = 0; i < numAnds; i++) {
 		bool result = andList[i].Run(left, right);
-		if (result == false) return false;
+		if (result == false) {
+			return false;
+		}
 	}
 
 	return true;
@@ -688,9 +709,17 @@ bool CNF :: Run (Record& left, Record& right) {
 
 ostream& operator<<(ostream& _os, CNF& _o) {
 	for (int i = 0; i < _o.numAnds; i++) {
-		if (i == 0) _os << "("; else _os << " (";
+		if (i == 0) {
+			_os << "("; 
+		} else {
+			_os << " (";
+		}
 		_os << _o.andList[i];
-		if (i < _o.numAnds-1) _os << ") AND"; else _os << ")";
+		if (i < _o.numAnds-1) {
+			_os << ") AND"; 
+		} else {
+			_os << ")";
+		}
 	}
 
 	return _os;
@@ -728,7 +757,9 @@ bool ConditionOnSchemas(AndList& _cond, Schema& _schemaL, Schema& _schemaR) {
 		if (idx != -1) sR += 1;
 	}
 
-	if (sL+sR != 1) return false;
+	if (sL+sR != 1) {
+		return false;
+	}
 
 	if (_cond.left->right->code == NAME) {
 		string s(_cond.left->right->value);
@@ -738,6 +769,9 @@ bool ConditionOnSchemas(AndList& _cond, Schema& _schemaL, Schema& _schemaR) {
 		if (idx != -1) sR += 1;
 	}
 
-	if ((sL == 1) && (sR == 1)) return true;
-	else return false;
+	if ((sL == 1) && (sR == 1)) {
+		return true;
+	} else {
+		return false;
+	}
 }

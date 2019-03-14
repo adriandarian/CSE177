@@ -48,8 +48,7 @@ ostream& Select::print(ostream& _os) {
 	}
 
 	output += " }; predicate : { ";
-	//return _os << output << predicate << "} ]";
-	return _os << "SELECT <- " << *producer << " : " << predicate << " :: " ;
+	return _os << output << predicate << "} ]";
 }
 
 

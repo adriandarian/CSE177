@@ -42,7 +42,9 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect, FuncOpe
 		idx += 1;
 	}
 	
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	for (int i = 0; i < nTbl; i++) {
+		cout << *forest[i] << endl;
+	}
 
 
 
@@ -50,25 +52,59 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect, FuncOpe
 	for (int i = 0; i < nTbl; i++) {
 		Record literal;
 		CNF cnf;
-		int ret = cnf.ExtractCNF (*_predicate, forestSchema[i], literal);
-		if (0 != ret) exit(1);
+		int ret = cnf.ExtractCNF(*_predicate, forestSchema[i], literal);
+		if (0 != ret) {
+			exit(1);
+		}
 
 		RelationalOp* op = new Select(forestSchema[i], cnf, literal, forest[i]);
 		forest[i] = op;
 	}
 
-	for (int i = 0; i < nTbl; i++) cout << *forest[i] << endl;
+	for (int i = 0; i < nTbl; i++) {
+		cout << *forest[i] << endl;
+	}
 
 
 	// call the optimizer to compute the join order
 	OptimizationTree* root;
 	optimizer->Optimize(_tables, _predicate, root);
+	OptimizationTree* rootCopy = root;
+
+
 
 	// create join operators based on the optimal order computed by the optimizer
+	// for (int i = 0; i < nTbl; i++) {
+	// 	Record literal;
+	// 	CNF cnf;
+	// 	int ret = cnf.ExtractCNF(*_predicate, forestSchema[i], literal);
+	// 	if (0 != ret) {
+	// 		exit(1);
+	// 	}
+
+	// 	RelationalOp* op = new Join(forestSchema[0], forestSchema[2], forestSchema[i], cnf, forest[0], forest[2]);
+	// 	forest[i] = op;
+	// }
+
+	// for (int i = 0; i < nTbl; i++) {
+	// 	cout << *forest[i] << endl;
+	// }
+
+	
+
+
 
 	// create the remaining operators based on the query
 
+
+
+
 	// connect everything in the query execution tree and return
 
+
+
+
 	// free the memory occupied by the parse tree since it is not necessary anymore
+
 }
+
