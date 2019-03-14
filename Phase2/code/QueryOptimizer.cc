@@ -9,14 +9,7 @@
 
 using namespace std;
 
-struct tuples {
-	Schema schema;
-	unsigned long long int size;
-	unsigned long long int cost;
-	string order;
-};
 
-	map <string, tuples> aMap;
 QueryOptimizer::QueryOptimizer(Catalog& _catalog) : catalog(&_catalog) {
 }
 
@@ -25,18 +18,19 @@ QueryOptimizer::~QueryOptimizer() {
 
 void QueryOptimizer::Optimize(TableList* _tables, AndList* _predicate, OptimizationTree* _root) {
 	// compute the optimal join order
-	int nTbl = 0;
-	int noTuples = 0;
+	//int nTbl = 0;
+	//int noTuples = 0;
 	TableList* tablesList = _tables;
 	vector<string> tables;
-	OptimizationTree* temp = new OptimizationTree;
+	OptimizationTree* temp = new OptimizationTree;	
 
 	for (TableList* node = _tables; node != NULL; node = node->next) {	
-		nTbl += 1;
+		//nTbl += 1;
 		tables.push_back(string(node->tableName));
 	}
-	temp = BuildTree(_tables, _root, tables);
-	*_root = *temp;
+
+	_root = BuildTree(_tables, _root, tables);
+	//*_root = *temp;
 }
 
 OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vector<string> tabs) {
@@ -44,10 +38,11 @@ OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree
 	tables = tabs;
 	OptimizationTree* root = _root;
 	TableList* tablesList = _tables;
+	
 
-	if(tabs.size() == 0) {
-		_root = NULL;
-		return _root;
+	if(tables.size() == 0) {
+		root = NULL;
+		return root;
 	}
 	else {
 		//Initialize
@@ -60,7 +55,7 @@ OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree
 		if(tables.size() == 1) {
 			node->leftChild = NULL;
 			node->rightChild = NULL;
-			*_root = *node;
+			return node;
 		}
 		else {
 			node->tables.push_back(tables[1]);
@@ -77,8 +72,12 @@ OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree
 			left->parent = node;
 			right->parent = node;
 
+			if(tables.size() == 2) {
+				return node;
+			}
 			OptimizationTree* temp = new OptimizationTree;
 			//At 2 because we did 0 and 1 already for edge cases
+			
 			for(int i = 2; i < tables.size(); ++i) {
 				OptimizationTree* tempN = new OptimizationTree;
 				OptimizationTree* tempL = new OptimizationTree;
@@ -96,7 +95,6 @@ OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree
 				tempN->rightChild = tempR;
 				tempN->parent = NULL;
 				node = tempN;
-				
 			}
 		}
 		return node;
