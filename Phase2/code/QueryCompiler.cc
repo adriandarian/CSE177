@@ -67,7 +67,7 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect, FuncOpe
 
 
 	// call the optimizer to compute the join order
-	OptimizationTree* root;
+	OptimizationTree* root = new OptimizationTree;
 	optimizer->Optimize(_tables, _predicate, root);
 	OptimizationTree* rootCopy = root;
 

@@ -29,8 +29,8 @@ void QueryOptimizer::Optimize(TableList* _tables, AndList* _predicate, Optimizat
 		tables.push_back(string(node->tableName));
 	}
 
-	_root = BuildTree(_tables, _root, tables);
-	//*_root = *temp;
+	temp = BuildTree(_tables, _root, tables);
+	*_root = *temp;
 }
 
 OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree* _root, vector<string> tabs) {
@@ -63,19 +63,20 @@ OptimizationTree* QueryOptimizer::BuildTree(TableList* _tables, OptimizationTree
 			right->tables.push_back(tables[1]);
 
 			node->leftChild = left;
-			node->rightChild = right;
-			node->parent = NULL;
 			left->leftChild = NULL;
-			left->rightChild = NULL;
 			right->leftChild = NULL;
+
+			node->rightChild = right;
+			left->rightChild = NULL;
 			right->rightChild = NULL;
+			node->parent = NULL;
+
 			left->parent = node;
 			right->parent = node;
 
 			if(tables.size() == 2) {
 				return node;
 			}
-			OptimizationTree* temp = new OptimizationTree;
 			//At 2 because we did 0 and 1 already for edge cases
 			
 			for(int i = 2; i < tables.size(); ++i) {
