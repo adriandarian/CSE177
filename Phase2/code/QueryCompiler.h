@@ -14,6 +14,8 @@
 #include "QueryOptimizer.h"
 #include "RelOp.h"
 
+#include <map>
+
 using namespace std;
 
 
@@ -22,13 +24,18 @@ private:
 	Catalog* catalog;
 	QueryOptimizer* optimizer;
 
+	// map<string, Scan> scanz;	
+	// map<string, Select> selectz;
+
+	// int checkindex;
+
 public:
 	QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer);
 	virtual ~QueryCompiler();
 
 	void Compile(TableList* _tables, NameList* _attsToSelect, FuncOperator* _finalFunction, AndList* _predicate, NameList* _groupingAtts, int& _distinctAtts, QueryExecutionTree& _queryTree);
 
-	RelationalOp* constTree(OptimizationTree* root, AndList* _predicate);
+	//RelationalOp* constTree(OptimizationTree* root, AndList* _predicate);
 };
 
 #endif // _QUERY_COMPILER_H
