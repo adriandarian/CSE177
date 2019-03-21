@@ -1,0 +1,26 @@
+catalog.sqlite is opened successfully.
+OK!
+SUCCESS TABLE: partsupp WAS FOUND
+SUCCESS TABLE: supplier WAS FOUND
+SUCCESS TABLE: part WAS FOUND
+SUCCESS RIGHT ATTRIBUTE: ps_partkey WAS FOUND IN THE DATABASE
+SUCCESS LEFT ATTRIBUTE: p_partkey WAS FOUND IN THE DATABASE
+SUCCESS RIGHT ATTRIBUTE: ps_suppkey WAS FOUND IN THE DATABASE
+SUCCESS LEFT ATTRIBUTE: s_suppkey WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: s_acctbal WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: s_suppkey WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: s_suppkey WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: ps_supplycost WAS FOUND IN THE DATABASE
+WRITEOUT: FILE: queryOutput.txt SCHEMA: (ps_supplycost:FLOAT [99865], s_suppkey:INTEGER [10000])
+-----GROUP BY: SCHEMA IN: (p_partkey:INTEGER [200000], p_name:STRING [199996], p_mfgr:STRING [5], p_brand:STRING [25], p_type:STRING [150], p_size:INTEGER [50], p_container:STRING [40], p_retailprice:FLOAT [20899], p_comment:STRING [131753], s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000], ps_partkey:INTEGER [200000], ps_suppkey:INTEGER [10000], ps_availqty:INTEGER [9999], ps_supplycost:FLOAT [99865], ps_comment:STRING [799124]) SCHEMA OUT: (ps_supplycost:FLOAT [99865], s_suppkey:INTEGER [10000])
+----------JOIN: SCHEMA LEFT: (p_partkey:INTEGER [200000], p_name:STRING [199996], p_mfgr:STRING [5], p_brand:STRING [25], p_type:STRING [150], p_size:INTEGER [50], p_container:STRING [40], p_retailprice:FLOAT [20899], p_comment:STRING [131753]) SCHEMA RIGHT: (s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000], ps_partkey:INTEGER [200000], ps_suppkey:INTEGER [10000], ps_availqty:INTEGER [9999], ps_supplycost:FLOAT [99865], ps_comment:STRING [799124]) SCHEMA OUT:(p_partkey:INTEGER [200000], p_name:STRING [199996], p_mfgr:STRING [5], p_brand:STRING [25], p_type:STRING [150], p_size:INTEGER [50], p_container:STRING [40], p_retailprice:FLOAT [20899], p_comment:STRING [131753], s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000], ps_partkey:INTEGER [200000], ps_suppkey:INTEGER [10000], ps_availqty:INTEGER [9999], ps_supplycost:FLOAT [99865], ps_comment:STRING [799124])
+---------------SCAN: SCHEMA IN/OUT: (p_partkey:INTEGER [200000], p_name:STRING [199996], p_mfgr:STRING [5], p_brand:STRING [25], p_type:STRING [150], p_size:INTEGER [50], p_container:STRING [40], p_retailprice:FLOAT [20899], p_comment:STRING [131753])
+---------------JOIN: SCHEMA LEFT: (s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000]) SCHEMA RIGHT: (ps_partkey:INTEGER [200000], ps_suppkey:INTEGER [10000], ps_availqty:INTEGER [9999], ps_supplycost:FLOAT [99865], ps_comment:STRING [799124]) SCHEMA OUT:(s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000], ps_partkey:INTEGER [200000], ps_suppkey:INTEGER [10000], ps_availqty:INTEGER [9999], ps_supplycost:FLOAT [99865], ps_comment:STRING [799124])
+--------------------SELECT: SCHEMA IN/OUT: (s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000])
+-------------------------SCAN: SCHEMA IN/OUT: (s_suppkey:INTEGER [10000], s_name:STRING [10000], s_address:STRING [10000], s_nationkey:INTEGER [25], s_phone:STRING [10000], s_acctbal:INTEGER [9955], s_comment:STRING [10000])
+--------------------SCAN: SCHEMA IN/OUT: (ps_partkey:INTEGER [200000], ps_suppkey:INTEGER [10000], ps_availqty:INTEGER [9999], ps_supplycost:FLOAT [99865], ps_comment:STRING [799124])
+QUERY EXECUTION TREE
+catalog.sqlite is opened successfully.
+catalog.sqlite is opened successfully.
+-----------------Begin Saving---------------------------------------------------------------------------
+-----------------Done Saving----------------------------------------------------------------------------

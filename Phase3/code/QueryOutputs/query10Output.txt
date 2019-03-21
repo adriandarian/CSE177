@@ -1,0 +1,17 @@
+catalog.sqlite is opened successfully.
+OK!
+SUCCESS TABLE: lineitem WAS FOUND
+SUCCESS ATTRIBUTE: l_discount WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: l_quantity WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: l_extendedprice WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: l_discount WAS FOUND IN THE DATABASE
+WRITEOUT: FILE: queryOutput.txt SCHEMA: (l_extendedprice * l_discount:FLOAT [0])
+-----SUM: SCHEMA IN: (l_orderkey:INTEGER [1500000], l_partkey:INTEGER [200000], l_suppkey:INTEGER [10000], l_linenumber:INTEGER [7], l_quantity:INTEGER [50], l_extendedprice:FLOAT [933900], l_discount:FLOAT [11], l_tax:FLOAT [9], l_returnflag:STRING [3], l_linestatus:STRING [2], l_shipdate:STRING [2526], l_commitdate:STRING [2466], l_receiptdate:STRING [2554], l_shipinstruct:STRING [4], l_shipmode:STRING [7], l_comment:STRING [4580667]) SCHEMA OUT: (l_extendedprice * l_discount:FLOAT [0])
+----------SELECT: SCHEMA IN/OUT: (l_orderkey:INTEGER [1500000], l_partkey:INTEGER [200000], l_suppkey:INTEGER [10000], l_linenumber:INTEGER [7], l_quantity:INTEGER [50], l_extendedprice:FLOAT [933900], l_discount:FLOAT [11], l_tax:FLOAT [9], l_returnflag:STRING [3], l_linestatus:STRING [2], l_shipdate:STRING [2526], l_commitdate:STRING [2466], l_receiptdate:STRING [2554], l_shipinstruct:STRING [4], l_shipmode:STRING [7], l_comment:STRING [4580667])
+---------------SCAN: SCHEMA IN/OUT: (l_orderkey:INTEGER [1500000], l_partkey:INTEGER [200000], l_suppkey:INTEGER [10000], l_linenumber:INTEGER [7], l_quantity:INTEGER [50], l_extendedprice:FLOAT [933900], l_discount:FLOAT [11], l_tax:FLOAT [9], l_returnflag:STRING [3], l_linestatus:STRING [2], l_shipdate:STRING [2526], l_commitdate:STRING [2466], l_receiptdate:STRING [2554], l_shipinstruct:STRING [4], l_shipmode:STRING [7], l_comment:STRING [4580667])
+No grouping atts
+QUERY EXECUTION TREE
+catalog.sqlite is opened successfully.
+catalog.sqlite is opened successfully.
+-----------------Begin Saving---------------------------------------------------------------------------
+-----------------Done Saving----------------------------------------------------------------------------

@@ -1,0 +1,14 @@
+catalog.sqlite is opened successfully.
+OK!
+SUCCESS TABLE: orders WAS FOUND
+SUCCESS TABLE: customer WAS FOUND
+SUCCESS RIGHT ATTRIBUTE: o_custkey WAS FOUND IN THE DATABASE
+SUCCESS LEFT ATTRIBUTE: c_custkey WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: o_totalprice WAS FOUND IN THE DATABASE
+SUCCESS ATTRIBUTE: c_name WAS FOUND IN THE DATABASE
+FAILURE ATTRIBUTE: name WAS NOT FOUND
+Query is INVALID
+catalog.sqlite is opened successfully.
+catalog.sqlite is opened successfully.
+-----------------Begin Saving---------------------------------------------------------------------------
+-----------------Done Saving----------------------------------------------------------------------------
