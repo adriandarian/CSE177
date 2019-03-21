@@ -184,7 +184,11 @@ ostream& Sum::print(ostream& _os) {
 
 
 GroupBy::GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtts, Function& _compute,	RelationalOp* _producer) {
-
+	schemaIn = _schemaIn;
+	schemaOut = _schemaOut;
+	groupingAtts = _groupingAtts;
+	compute = _compute;
+	producer = _producer;
 }
 
 GroupBy::~GroupBy() {

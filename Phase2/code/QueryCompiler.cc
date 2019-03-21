@@ -80,6 +80,16 @@ void QueryCompiler::Compile(TableList* _tables, NameList* _attsToSelect, FuncOpe
 	// create join operators based on the optimal order computed by the optimizer
 	//RelationalOp* join = constTree(rootCopy, _predicate);
 
+	RelationalOp* leftOP, *rightOP;
+	Record literal;
+	CNF cnf;
+	int ret = cnf.ExtractCNF(*_predicate, forestSchema[0], literal);
+	Schema forestSchemaOut = forestSchema[0];
+	forestSchemaOut.Append(forestSchema[2]);
+	RelationalOp* op = new Join(forestSchema[0], forestSchema[2], forestSchemaOut, cnf, leftOP, rightOP);
+
+
+
 	for (int i = 0; i < nTbl; i++) {
 		cout << *forest[i] << endl;
 	}
