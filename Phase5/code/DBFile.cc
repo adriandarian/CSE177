@@ -1,13 +1,12 @@
 #include <string>
-
+#include <iostream>
 #include "Config.h"
 #include "Record.h"
 #include "Schema.h"
 #include "File.h"
 #include "DBFile.h"
-
+#include <fstream>
 using namespace std;
-
 
 DBFile::DBFile () : fileName("") {
 }
@@ -28,70 +27,90 @@ DBFile& DBFile::operator=(const DBFile& _copyMe) {
 	return *this;
 }
 
-//Lecture Notes
 int DBFile::Create (char* f_path, FileType f_type) {
-	fileType = f_type;
-	return file.Open(0, f_path);	
+	return file.Open(0,f_path);
 }
 
-//Modified from lecture notes - moved MoveFirst() call here
 int DBFile::Open (char* f_path) {
-	int o = file.Open(1, f_path);
-
-	if (o == 0) {
-		MoveFirst();
-		return o;
-	}
-	//don't think this is needed
-	return -1;
+	//Set the file name used for printing in Scan::print
+	fileName = f_path;
+	//Open the file
+	int o = file.Open (1,f_path);
+	//cout << f_path << endl;
+	//Checking if it opened successfully
+	if(o == 0)
+		MoveFirst();		
+	return o;
 }
 
-//Lecture notes, move MoveFirst() call to Open() from Load()
 void DBFile::Load (Schema& schema, char* textFile) {
-	FILE* fOpen = fopen(textFile, "r");
+	//Point the file to the first page
+	MoveFirst();
+	//Open the textfile you are loading data from
+	FILE* f = fopen(textFile,"r");
+	//A record object to extract the data into
 	Record rec;
-	while (rec.ExtractNextRecord(schema, *fOpen)) {
+	//Extract the data from the file, for this schema, into the record
+	while(rec.ExtractNextRecord(schema,*f)){
 		AppendRecord(rec);
 	}
-	file.AddPage(page, currPage);
-	currPage++;
-	page.EmptyItOut();
-	fclose(fOpen);
+	//Add the last page of data
+	file.AddPage(page,currPage++);	
 }
 
 int DBFile::Close () {
-	return file.Close();
+	//Close the file
+	file.Close();
 }
 
 void DBFile::MoveFirst () {
+	//Point the page to 0
 	currPage = 0;
-	file.GetPage(page, currPage);
+	//Get the page at currPage
+	file.GetPage(page,currPage);
+
 }
 
 void DBFile::AppendRecord (Record& rec) {
-	if(!page.Append(rec)) {
-		file.AddPage(page, currPage);
-		currPage++;
+	//append the record to the page, also check if the data has reached the max page size
+	int max = page.Append(rec);
+	//Checking to see if data has reached max page size
+	while(max == 0){
+		//While the data reaches the max size, add pages
+		file.AddPage(page, currPage++);
+		//Empty the page in order to clear the data so it can be readded
 		page.EmptyItOut();
-		page.Append(rec);
+		//Continuing to check until it no longer reaches the max size
+		max = page.Append(rec);
 	}
 }
 
-// Lecture Notes
 int DBFile::GetNext (Record& rec) {
-	int ret = page.GetFirst(rec);
+	//cout << currPage << endl;
+	//Get the first record of the page
+	//cout << "---- DB NEXT ------" << endl;
 
-	if (ret == true) {
-		return true;
-	} else {
-		if (currPage == file.GetLength()) {
-			return false;
-		} else {
-			file.GetPage(page, currPage);
-			currPage++;
+	int ret = page.GetFirst(rec);
+	if(ret){
+		//success		
+		return 0;
+	}else{
+		//Check if you've reached the end of the file
+		if(currPage == file.GetLength()){
+			return -1;
+		}else{
+			//Move onto the next page
+			file.GetPage(page,currPage++);
+			//Get the first record of the page
 			ret = page.GetFirst(rec);
-			return true;
+			return 0;
 		}
 	}
+}
 
+string DBFile::GetFile (){
+	//Get the file name for printing
+	//Also set the page to 0, so we can start getting the data from the first page, just in case
+	currPage = 0;
+	return fileName;
 }

@@ -46,7 +46,7 @@ bool Comparison :: Run (Record& left, Record& right) {
 
 	char* left_bits = left.GetBits();
 	char* lit_bits = right.GetBits();
-
+	//cout<< left_bits << endl;
 	// first get a pointer to the first value to compare
 	if (operand1 == Left) val1 = left_bits + ((int *) left_bits)[whichAtt1 + 1];
 	else val1 = lit_bits + ((int *) lit_bits)[whichAtt1 + 1];
@@ -64,7 +64,7 @@ bool Comparison :: Run (Record& left, Record& right) {
 		case Integer: {
 			val1Int = *((int *) val1);
 			val2Int = *((int *) val2);
-
+			//cout << "Integer "<<val1Int << " "<< val2Int << endl;
 			// and check the operation type in order to actually do the comparison
 			switch (op) {
 				case LessThan: return (val1Int < val2Int);
@@ -76,7 +76,7 @@ bool Comparison :: Run (Record& left, Record& right) {
 		case Float: {
 			val1Double = *((double *) val1);
 			val2Double = *((double *) val2);
-
+			//cout << "Double "<<val1Double << " "<< val2Double << endl;
 			// and check the operation type in order to actually do the comparison
 			switch (op) {
 				case LessThan: return (val1Double < val2Double);
@@ -461,6 +461,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			recSize += cLen;
 			recPos += cLen;
 			numFieldsInLiteral += 1;
+			//cout << "Left String "<<currCond->left->Left->code << endl;
 		}
 		else if (currCond->left->left->code == INTEGER) {
 			// see if it is an integer
@@ -521,7 +522,12 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			// add to record literal
 			attStart[numFieldsInLiteral] = recSize;
 			int cLen = strlen(currCond->left->right->value);
+			//Changed cLen to account for null char
+			cLen++;
 			memcpy(recPos, currCond->left->right->value, cLen);
+			//Made sure to add in null char
+			recPos[cLen] = '\0';
+			//cout << "Right String "<<currCond->left->right->value << endl;
 
 			if (cLen % sizeof (int) != 0) {
 				cLen += sizeof (int) - (cLen % sizeof (int));
@@ -535,7 +541,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			andList[numAnds].operand2 = Literal;
 			andList[numAnds].whichAtt2 = numFieldsInLiteral;
 			typeRight = Integer;
-
+			//cout << "Right Int "<< currCond->left->right->value << endl;
 			// add to record literal
 			attStart[numFieldsInLiteral] = recSize;
 			int cLen = sizeof(int);
@@ -549,10 +555,11 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 			andList[numAnds].operand2 = Literal;
 			andList[numAnds].whichAtt2 = numFieldsInLiteral;
 			typeRight = Float;
-
+			//cout << "Right FLOAT "<< currCond->left->right->value << endl;
 			// add to record literal
 			attStart[numFieldsInLiteral] = recSize;
 			int cLen = sizeof(double);
+			//Changed to left->right from left->left
 			*((double *) recPos) = atof (currCond->left->right->value);
 			recSize += cLen;
 			recPos += cLen;
@@ -567,9 +574,16 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& schema, Record& literal) {
 
 		// now we check to make sure that there was not a type mismatch
 		if (typeLeft != typeRight) {
-			cerr << "ERROR: Type mismatch for " << currCond->left->left->value
-				<< " AND "	<< currCond->left->right->value << "!" << endl;
-			return -1;
+			// if(typeLeft == Float && typeRight == Integer){
+
+			// }else{
+			// cerr << "ERROR: Type mismatch for " << currCond->left->left->value << " AND "	<< currCond->left->right->value << "!" << endl;
+			// 	return -1;
+			// }
+			//cerr<< currCond->left->left->code << " AND " << currCond->left->right->code << endl;
+			cerr << "ERROR: Type mismatch for " << currCond->left->left->value << " AND "	<< currCond->left->right->value << "!" << endl;
+				return -1;
+			
 		}
 
 		// set up the type info for this comparison
@@ -673,7 +687,7 @@ int CNF::ExtractCNF (AndList& parseTree, Schema& leftSchema, Schema& rightSchema
 		numAnds += 1;
 		currCond = currCond->rightAnd;
 	}
-
+	//cout << "SUCCESS" << endl;
 	return 0;
 }
 

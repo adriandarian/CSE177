@@ -77,6 +77,17 @@ public:
 
 	// print record content based on schema
     ostream& print(ostream& _os, Schema& mySchema);
+
+		// print record directly to stdout (for debug)
+	// e.g. (gdb) call rec.show(schemaIn)
+	void show(Schema& mySchema);
+
+	// create minified key from record (used in GroupBy::GetNext())
+	string createKeyFromRecord(Schema& _schema);
+
+	// create record especially for b+tree node (3 integers)
+	void extractBPlusTreeNode(int*& _attrs);
+
 };
 
 #endif //_RECORD_H

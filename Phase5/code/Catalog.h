@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <sqlite3.h>
 
 #include "Schema.h"
+#include "TwoWayList.h"
+#include "sqlite3.h"
 
 using namespace std;
 
@@ -17,26 +18,20 @@ private:
 	 * A series of data structures you may find useful are included.
 	 * Efficient data structures are recommended.
 	 * Avoid linear traversals when possible.
-	 */
-	sqlite3* db;
-	char *zErrMsg = 0;
-	int rc;
-	sqlite3_stmt* statement;
-
-	struct attribute {
-		string name;
-		string type;
-		unsigned int numDistinct;
-		string tblName;
-	};
-
-	vector<attribute> attributes;
-
-        vector<string> SchemaName;
-        vector<int> SchemaTuples;
-        vector<string> SchemaPosition;
-
-	vector<Schema> schema;
+	 */							
+	 							//An element of a vectors corresponds to other elements in other vectors based on index number
+	vector<Schema> schemas;		//Vector to hold all the schemas
+	vector<string> schemaN;		//Vector to contain table names
+	vector<int> schemaT;		//Vector to contain number of tuples
+	vector<string> schemaL;		//Vector to contain Datafile
+	sqlite3* db;				//Database
+	sqlite3_stmt* stmt;			//Statement variable
+	int rc;						//Integer to hold SQLite messages
+	char *zErrMsg;				//To handle error messages.
+	vector<string> attributes, types, tNames;	//Total vectors; Vectors to contain all the info from databases, they are used to fill out the vectors above.
+	vector<unsigned int>distincts;	
+	string tempN;				//Temporary helper variable
+	bool error;
 
 public:
 	/* Catalog constructor.
@@ -116,15 +111,26 @@ public:
 	 * ...
 	 * Tables/attributes are sorted in ascending alphabetical order.
 	 */
+
 	friend ostream& operator<<(ostream& _os, Catalog& _c);
 
-/*
-	vector<string> getSchemaName() { return SchemaName; }
-	vector<int> getSchemaTuples() { return SchemaTuples; }
-	vector<string> getSchemaPosition() { return SchemaPosition; }
+	//static int putStuffIn(void* catalog, int argc, char** argv, char ** azColName);
 
-	vector<Schema> getSchema() { return schema; }
-*/
+	//Helper functions to work with overloaded <<
+	vector<string> getSchemaN(){
+		return schemaN;
+	}
+	vector<string> getSchemaL(){
+		return schemaL;
+	}
+	vector<int> getSchemaT(){
+		return schemaT;
+	}
+	vector<Schema> getSchemas(){
+		return schemas;
+	}
+	//Lazy printing for me
+	void print();
 };
 
 #endif //_CATALOG_H

@@ -2,20 +2,28 @@
 #define _REL_OP_H
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <unordered_set>
-#include <unordered_map>
-#include <map>
-#include <mutex>
-#include <pthread.h>
-#include <deque>
 
 #include "Schema.h"
 #include "Record.h"
 #include "DBFile.h"
 #include "Function.h"
 #include "Comparison.h"
+#include <fstream>
+#include <unordered_set>
+#include <unordered_map>
+
+
+#include <map>
+#include "EfficientMap.cc"
+#include "Keyify.h"
+#include <mutex>
+#include <pthread.h>
+#include <deque>
+
+struct GroupVal {
+	double sum;
+	Record rec;
+};
 
 using namespace std;
 
@@ -34,8 +42,6 @@ public:
 
 	// every operator has to implement this method
 	virtual bool GetNext(Record& _record) = 0;
-
-	virtual Schema getSchema() = 0;
 
 	/* Virtual function for polymorphic printing using operator<<.
 	 * Each operator has to implement its specific version of print.
@@ -61,11 +67,7 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schema;}
-
 	virtual ostream& print(ostream& _os);
-
-	string tableName;
 };
 
 class Select : public RelationalOp {
@@ -88,8 +90,6 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schema;}
-	
 	virtual ostream& print(ostream& _os);
 };
 
@@ -118,8 +118,6 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schemaOut;}
-
 	virtual ostream& print(ostream& _os);
 };
 
@@ -139,6 +137,8 @@ private:
 	RelationalOp* left;
 	RelationalOp* right;
 
+
+
 public:
 	Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 		CNF& _predicate, RelationalOp* _left, RelationalOp* _right);
@@ -146,9 +146,9 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schemaOut;}
-
 	virtual ostream& print(ostream& _os);
+	int push;
+	unsigned long int size;
 };
 
 class DuplicateRemoval : public RelationalOp {
@@ -159,7 +159,7 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
-		//Set for P4
+	//Set for P4
 	unordered_set<string> recordSet;
 
 public:
@@ -167,8 +167,6 @@ public:
 	virtual ~DuplicateRemoval();
 
 	virtual bool GetNext(Record& _record);
-
-	virtual Schema getSchema() {return schema;}
 
 	virtual ostream& print(ostream& _os);
 };
@@ -186,12 +184,6 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
-	double runningSum = 0;
-	Type typeSum;
-	Record tempRec;
-	bool infiniteLoop = false;	
-	char* bits = new char[1];
-
 public:
 	Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
 		RelationalOp* _producer);
@@ -199,11 +191,7 @@ public:
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schemaOut;}
-
 	virtual ostream& print(ostream& _os);
-
-	string expression;
 };
 
 class GroupBy : public RelationalOp {
@@ -221,23 +209,55 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
-		//GroupBy
-	map<string, double> mapGroupBy;
+// 		// first-run indicator
+// 	bool isFirst;
 
-	map<string,double>::iterator it;
+// 	// map for each grouping attribute
+// 	unordered_map<string, GroupVal> groups;
+// 	// unordered_map<CompositeKey, GroupVal> groups;
 
-	vector <Attribute> atts;
-	
-	vector <string> attNames;
+
+// 	// iterator for the groups
+// 	unordered_map<string, GroupVal>::iterator groupsIt;
+// // unordered_map<CompositeKey, GroupVal>::iterator groupsIt;
+// 	FuncOperator* parseTree;
+
+
 
 public:
+
+
+
+	int cnt = 0;
+
+	bool isFirst = true;
+
+	unordered_map<string, deque<Record*>*> gmap;
+
+	unordered_map<string, deque<Record*>*> newGmap;
+
+	unordered_map<string, int> gmapSumInt;
+
+	unordered_map<string, double> gmapSumDouble;
+
+	FuncOperator* parseTree;
+
+
+	GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtts,
+		Function& _compute, FuncOperator* _parseTree, RelationalOp* _producer);
+
 	GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtts,
 		Function& _compute,	RelationalOp* _producer);
+
 	virtual ~GroupBy();
+
+	virtual Schema GetSchema (){
+		return schemaOut;
+	}
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schemaOut;}
+	virtual RelationalOp* GetProducer();
 
 	virtual ostream& print(ostream& _os);
 };
@@ -253,17 +273,15 @@ private:
 	// operator generating data
 	RelationalOp* producer;
 
+	ofstream out;
+
 public:
 	WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer);
 	virtual ~WriteOut();
 
 	virtual bool GetNext(Record& _record);
 
-	virtual Schema getSchema() {return schema;}
-
 	virtual ostream& print(ostream& _os);
-
-	ofstream myFile;
 };
 
 

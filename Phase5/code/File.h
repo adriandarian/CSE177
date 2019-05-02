@@ -48,7 +48,6 @@ private:
 	int fileDescriptor;
 	string fileName;
 	off_t curLength;
-	Page page;
 
 public:
 	File();

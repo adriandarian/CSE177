@@ -15,7 +15,6 @@ class DBFile {
 private:
 	File file;
 	string fileName;
-	FileType fileType;
 	off_t currPage;
 	Page page;
 
@@ -34,6 +33,7 @@ public:
 	void MoveFirst ();
 	void AppendRecord (Record& _addMe);
 	int GetNext (Record& _fetchMe);
+	string GetFile();
 };
 
 #endif //DBFILE_H
