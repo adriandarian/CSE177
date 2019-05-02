@@ -187,6 +187,58 @@ Join::Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 	right = _right;
 }
 
+void Open() {
+	R.Open();
+	S.Open();
+
+	s = S.GetNext() // s = current tuple of S
+}
+
+void Close() {
+	R.Close();
+	S.Close();
+}
+
+// GetNext(): output the next (just 1 !!!) tuple in the join R ⋈ S
+void NestedLoopJoin() {
+	// Note: s already has the current (next ?) tuple of relation S
+	while (true) {
+		// Loop exits when:
+		// 	1. we found a tuple ∈ R that joins with s
+		// 	2. R ⋈ S is done (returns NotFound)
+
+		// Get the next tuple r ∈ R to Join
+		r = R.GetNext(); // Get next tuple in R to perform Join
+
+		if (r == NotFound) {
+			// Tuple s has joined with every tuple ∈ R
+			// Use next tuple ∈ S in the Join
+			s = S.GetNext();
+
+			if (s == NotFound) {
+				// We have processed the last tuple ∈ S
+				return NotFound; // Done !!!
+			}
+
+			// We have a new tuple s ∈ S
+			// Restart R from the beginning
+			R.Close(); // Close first
+			R.Open(); // Reset R to the beginning
+			r = R.GetNext(); // Get current tuple in R
+		}
+
+		// When we reach here, we have:
+		// 	s = current tuple in S for the Join operation
+		// 	r = current tuple in R for the Join operation
+
+		if (r(Y) == s(Y)) {
+			return (r, s); // Return next tuple of Join
+		}
+
+		// Repeat and try the next tuple in R
+	}
+}
+
 bool Join::GetNext(Record& _record) {
 
 }
