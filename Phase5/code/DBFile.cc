@@ -55,7 +55,8 @@ void DBFile::Load (Schema& schema, char* textFile) {
 		AppendRecord(rec);
 	}
 	//Add the last page of data
-	file.AddPage(page,currPage++);	
+	file.AddPage(page,currPage++);
+	//page.EmptyItOut();
 }
 
 int DBFile::Close () {

@@ -235,31 +235,72 @@ Join::Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 }
 
 Join::~Join() {
-	//printf("Deconstructor Join\n");
+		//printf("Deconstructor Join\n");
 }
 
 bool Join::GetNext(Record& _record) {
 	//Build Phase
 	//TwoWayList<string> leftList;
 	stringstream tempL, tempR;
+	Record tempRecL, tempRecR;
 	list<string> listLeft, listRight;
+	list<Record> listRec, listTemp;
+	char* bits;
+	int i = 0;
 
-	while(left->GetNext(_record)) {
+	// for(int i = 0; i < schemaLeft.GetNumAtts(); i++) {
+	// 	_record.print(tempL, schemaLeft);
+	// 	_record.print(cout, schemaLeft);
+	// 	listLeft.push_back(tempL.str());		
+	// }
+	cout << "Enter Join" << endl;
+	while(true) {
+		//cout << schemaLeft.GetAtts()[i].name << endl;
+		cout << "Enter Again" << endl;
+		bool ret = left->GetNext(_record);
+		cout << "Ret: " << ret << endl;
+		if(ret == 1) {
+			cout << "If" << endl;
+		}
+		else {
+			cout << "Break" << endl;
+			break;
+		}
+		cout << "First While" << endl;
 		_record.print(tempL, schemaLeft);
-		listLeft.push_back(tempL.str());		
-	}
+		_record.print(cout, schemaLeft);
 
+		//bits = new char[_record.GetSize()];
+		cout << "Consume" << endl;
+		//tempRecL.Consume(bits);
+		cout << "Push" << endl;
+		//listRec.push_back(_record);
+		listLeft.push_back(tempL.str());		
+		cout << "End" << endl;
+	}
 	//Probe Phase
-	while(right->GetNext(_record)) {
-		list <string> :: iterator it;
-		_record.print(tempR, schemaRight); 
-		for(it = listLeft.begin(); it != listLeft.end(); ++it) {
-		//if(predicate.Run(leftRecord, rightRecord)) {
+	cout << "Second While" << endl;
+	while(true) {
+		bool ret = right->GetNext(_record);
+		cout << "2nd Ret: " << ret << endl;
+		if(ret == 1) {
+			cout << "2nd If" << endl;
+		}
+		else {
+			cout << "2nd break" << endl;
+			break;
+		}
+		list <Record> :: iterator it;
+		//_record.print(tempR, schemaRight);
+		//tempRecL.MergeRecords(left, right, 1, 1, te, 2, 1);
+		for(it = listRec.begin(); it != listRec.end(); ++it) {
+			if(predicate.Run(*it, _record)) {
 			//if(tempR.str() == *it) {
 				//true - join
-				_record.print(cout, schemaRight);	
+				cout << "Matching" << endl;
+				_record.print(cout, schemaRight);
 			}
-		//}
+		}
         	
 	}
 
@@ -321,6 +362,7 @@ bool DuplicateRemoval::GetNext(Record& _record) {
 	while(producer->GetNext(_record)) {
 		stringstream temp;
 		_record.print(temp, schema);
+		_record.GetBits();
 		//temp << endl;
 		bool exists = recordSet.find(temp.str()) != recordSet.end();
 		if(!exists) {
