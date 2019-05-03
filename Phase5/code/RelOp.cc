@@ -243,7 +243,7 @@ bool Join::GetNext(Record& _record) {
 	//Build Phase
 	//TwoWayList<string> leftList;
 	stringstream tempL, tempR;
-	Record tempRecL, tempRecR;
+	Record tempRecL, tempRecR, compareRec;
 	list<string> listLeft, listRight;
 	list<Record> listRec, listTemp;
 	TwoWayList<Record> listTwo;
@@ -269,6 +269,7 @@ bool Join::GetNext(Record& _record) {
 	*/
 //	cout << "Enter Join" << endl;
 	while(true) {
+	//for(int i = 0; i < schemaLeft.GetNumAtts(); i++) {
 		//cout << schemaLeft.GetAtts()[i].name << endl;
 //		cout << "Enter Again" << endl;
 		bool ret = left->GetNext(_record);
@@ -283,21 +284,30 @@ bool Join::GetNext(Record& _record) {
 	//	cout << "First While" << endl;
 		_record.print(tempL, schemaLeft);
 		_record.print(cout, schemaLeft);
+	//	cout << endl;
 
-		//bits = new char[_record.GetSize()];
+		bits = new char[_record.GetSize()];
+		bits = _record.GetBits();
 	//	cout << "Consume" << endl;
-		//tempRecL.Consume(bits);
+		tempRecL.Consume(bits);
+		//tempRecL.Swap(_record);
+		tempRecL.print(cout, schemaLeft);
+		_record.print(cout, schemaLeft);
+
+		//cout << endl;
 	//	cout << "Push" << endl;
-		listTwo.Append(_record);
+		listTwo.Append(tempRecL);
 		//listRec.push_back(_record);
 		//listLeft.push_back(tempL.str());		
 	//	cout << "End" << endl;
+	//	return true;
 	}
 
 
 	
 //	cout << "Second While" << endl;
 	while(true) {
+	//for(int i = 0; i < schemaRight.GetNumAtts(); i++) {
 		bool ret = right->GetNext(_record);
 		//cout << "2nd Ret: " << ret << endl;
 		if(ret == 1) {
@@ -315,21 +325,34 @@ bool Join::GetNext(Record& _record) {
 		//cout << "Probe print for" << endl;
 		for(int i = 0; i < listTwo.Length();i++){
 			//cout << listTwo.CurrentKey()<< ": "<< listTwo.CurrentData()<< endl;
-			//listTwo.Advance();
-			if(predicate.Run(listTwo.Current(), _record)) {
+			//listTwo.Advance()
+			//cout << "AAA" << listTwo.Current();
+			compareRec = listTwo.Current();
+			//compareRec.show(schemaOut);
+			compareRec.print(cout, schemaOut);
+
+			cout << endl;
+			if(predicate.Run(compareRec, _record)) {
 			//if(tempR.str() == *it) {
 				//true - join
-				tempRecR.AppendRecords(listTwo.Current(), _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				tempRecR.AppendRecords(compareRec, _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
 				//cout << "Matching" << endl;
-				tempRecR.print(cout, schemaOut);
+				_record.Swap(tempRecR);
+				cout << endl;
+				_record.print(cout, schemaOut);
+				_record.print(cout, schemaRight);
+			//	tempRecR.print(cout, schemaOut);
+				cout << endl;
 			}
+			cout << endl;
+
 			listTwo.Advance();
 		}
 		
-
+		//return true;
         	
-	}
-	
+	} // 2nd while loop
+	//return false;	
 //order maker: call predicate get sum order maker - project a schema - project a record	
 //SHJ: infinite loop. hot potato boolean that switches between each side.. keeps printing out matching records and hot potatoing
 	//copy hash join twice and have a boolean that switches between the two
