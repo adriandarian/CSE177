@@ -3,6 +3,7 @@
 #include <cstring>
 #include <list>
 #include "RelOp.h"
+#include "TwoWayList.h"
 
 using namespace std;
 
@@ -245,65 +246,93 @@ bool Join::GetNext(Record& _record) {
 	Record tempRecL, tempRecR;
 	list<string> listLeft, listRight;
 	list<Record> listRec, listTemp;
+	TwoWayList<Record> listTwo;
+	listTwo.MoveToStart();
 	char* bits;
 	int i = 0;
 
-	// for(int i = 0; i < schemaLeft.GetNumAtts(); i++) {
-	// 	_record.print(tempL, schemaLeft);
-	// 	_record.print(cout, schemaLeft);
-	// 	listLeft.push_back(tempL.str());		
-	// }
-	cout << "Enter Join" << endl;
+	//advance, if at the end break
+	/*
+	for(int i = 0; i < schemaLeft.GetNumAtts(); i++) {
+		//_record.print(tempL, schemaLeft);
+		//_record.print(cout, schemaLeft);
+		
+		bits = new char[_record.GetSize()];
+		bits = _record.GetBits();
+		tempRecL.Consume(bits);
+		listRec.push_back(tempRecL);
+		//listLeft.push_back(tempL.str());		
+	}
+	for(auto it = listRec.begin(); it != listRec.end()l ++it) {
+		it->print(cout, schemaOut);
+	}
+	*/
+//	cout << "Enter Join" << endl;
 	while(true) {
 		//cout << schemaLeft.GetAtts()[i].name << endl;
-		cout << "Enter Again" << endl;
+//		cout << "Enter Again" << endl;
 		bool ret = left->GetNext(_record);
-		cout << "Ret: " << ret << endl;
+//		cout << "Ret: " << ret << endl;
 		if(ret == 1) {
-			cout << "If" << endl;
+//		cout << "If" << endl;
 		}
 		else {
-			cout << "Break" << endl;
+//			cout << "Break" << endl;
 			break;
 		}
-		cout << "First While" << endl;
+	//	cout << "First While" << endl;
 		_record.print(tempL, schemaLeft);
 		_record.print(cout, schemaLeft);
 
 		//bits = new char[_record.GetSize()];
-		cout << "Consume" << endl;
+	//	cout << "Consume" << endl;
 		//tempRecL.Consume(bits);
-		cout << "Push" << endl;
+	//	cout << "Push" << endl;
+		listTwo.Append(_record);
 		//listRec.push_back(_record);
-		listLeft.push_back(tempL.str());		
-		cout << "End" << endl;
+		//listLeft.push_back(tempL.str());		
+	//	cout << "End" << endl;
 	}
-	//Probe Phase
-	cout << "Second While" << endl;
+
+
+	
+//	cout << "Second While" << endl;
 	while(true) {
 		bool ret = right->GetNext(_record);
-		cout << "2nd Ret: " << ret << endl;
+		//cout << "2nd Ret: " << ret << endl;
 		if(ret == 1) {
-			cout << "2nd If" << endl;
+			//cout << "2nd If" << endl;
 		}
 		else {
-			cout << "2nd break" << endl;
+			//cout << "2nd break" << endl;
 			break;
 		}
 		list <Record> :: iterator it;
 		//_record.print(tempR, schemaRight);
 		//tempRecL.MergeRecords(left, right, 1, 1, te, 2, 1);
-		for(it = listRec.begin(); it != listRec.end(); ++it) {
-			if(predicate.Run(*it, _record)) {
+			//Probe Phase
+		listTwo.MoveToStart();
+		//cout << "Probe print for" << endl;
+		for(int i = 0; i < listTwo.Length();i++){
+			//cout << listTwo.CurrentKey()<< ": "<< listTwo.CurrentData()<< endl;
+			//listTwo.Advance();
+			if(predicate.Run(listTwo.Current(), _record)) {
 			//if(tempR.str() == *it) {
 				//true - join
-				cout << "Matching" << endl;
-				_record.print(cout, schemaRight);
+				tempRecR.AppendRecords(listTwo.Current(), _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				//cout << "Matching" << endl;
+				tempRecR.print(cout, schemaOut);
 			}
+			listTwo.Advance();
 		}
+		
+
         	
 	}
-
+	
+//order maker: call predicate get sum order maker - project a schema - project a record	
+//SHJ: infinite loop. hot potato boolean that switches between each side.. keeps printing out matching records and hot potatoing
+	//copy hash join twice and have a boolean that switches between the two
 }
 
 ostream& Join::print(ostream& _os) {
@@ -515,6 +544,7 @@ GroupBy::~GroupBy() {
 }
 
 //WTF Is this shit
+//map with relational op usage
 bool GroupBy::GetNext(Record& _record) {
 	Type retType;
 	if(isFirst == true) {
