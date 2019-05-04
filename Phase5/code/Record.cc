@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 #include "Config.h"
 #include "Swap.h"
@@ -65,19 +66,25 @@ int Record :: ExtractNextRecord (Schema& mySchema, FILE& textFile) {
 	// this is the current position (int bytes) in the binary
 	// representation of the record that we are dealing with
 	int currentPosInRec = sizeof (int) * (n + 1);
-
+	//cout << n <<endl;
 	// loop through all of the attributes
 	for (int i = 0; i < n; i++) {
 		// first we suck in the next attribute value
 		int len = 0;
-		while (1) {
-			int nextChar = getc (&textFile);
 
-			if (nextChar == '|') break;
+		while (1) {
+			//cout << "did i get here?" <<endl;
+			int nextChar = getc (&textFile);
+			if (nextChar == '|') {
+				//cout << "|" << endl;
+				break;
+			}
 			else if (nextChar == EOF) {
 				delete [] space;
 				delete [] recSpace;
 				return 0;
+			}else{
+				//cout << nextChar;
 			}
 
 			space[len] = nextChar;
@@ -430,6 +437,91 @@ ostream& Record :: print(ostream& _os, Schema& mySchema) {
 			_os << ", ";
 		}
 	}
-
+	//why no end bracket?
+	_os << "}";
 	return _os;
 }
+
+string Record :: createKeyFromRecord(Schema& _schema) {
+	stringstream ss;
+	int n = _schema.GetNumAtts();
+	vector<Attribute> atts = _schema.GetAtts();
+	
+	for (int i = 0; i < n; i++) {
+		// print the attribute index, instead of name to make it short
+		ss << i << ":";
+
+		// use the i^th slot at the head of the record to get the
+		// offset to the correct attribute in the record
+		int pointer = ((int *) bits)[i + 1];
+
+		// here we determine the type, which given in the schema;
+		// depending on the type we then print out the contents
+		// first is integer
+		if (atts[i].type == Integer) {
+			int *myInt = (int *) &(bits[pointer]);
+			ss << *myInt;
+		}
+		// then is a double
+		else if (atts[i].type == Float) {
+			double *myDouble = (double *) &(bits[pointer]);
+			ss << fixed << *myDouble;
+		}
+		// then is a character string
+		else if (atts[i].type == String) {
+			char *myString = (char *) &(bits[pointer]);
+			ss << myString;
+		} 
+
+		// print out a comma as needed to separate tuples
+		if (i != n - 1) {
+			ss << ",";
+		}
+	}
+
+	return ss.str();
+}
+
+
+void Record :: show(Schema& mySchema) {
+	int n = mySchema.GetNumAtts();
+	vector<Attribute> atts = mySchema.GetAtts();
+
+	cout << '{';
+
+	// loop through all of the attributes
+	for (int i = 0; i < n; i++) {
+		// print the attribute name
+		cout << atts[i].name << ": ";
+
+		// use the i^th slot at the head of the record to get the
+		// offset to the correct attribute in the record
+		int pointer = ((int *) bits)[i + 1];
+
+		// here we determine the type, which given in the schema;
+		// depending on the type we then print out the contents
+		// first is integer
+		if (atts[i].type == Integer) {
+			int *myInt = (int *) &(bits[pointer]);
+			cout << *myInt;
+		}
+		// then is a double
+		else if (atts[i].type == Float) {
+			double *myDouble = (double *) &(bits[pointer]);
+			cout << fixed << *myDouble;
+		}
+		// then is a character string
+		else if (atts[i].type == String) {
+			char *myString = (char *) &(bits[pointer]);
+			cout << myString;
+		} 
+
+		// print out a comma as needed to make things pretty
+		if (i != n - 1) {
+			cout << ", ";
+		}
+	}
+
+	cout << '}' << endl;
+}
+

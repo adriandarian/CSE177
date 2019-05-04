@@ -8,58 +8,65 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
-
+#include <map>
 using namespace std;
 
+//Following code on optimiztion.alg to come up with data structures
+
 // data structure used by the optimizer to compute join ordering
+// struct OptimizationTree {
+// 	// list of tables joined up to this node
+// 	vector<string> tables;
+// 	// number of tuples in each of the tables (after selection predicates)
+// 	vector<int> tuples;
+// 	// number of tuples at this node
+// 	int noTuples;
+
+// 	// connections to children and parent
+// 	OptimizationTree* parent;
+// 	OptimizationTree* leftChild;
+// 	OptimizationTree* rightChild;
+// };
 struct OptimizationTree {
 	// list of tables joined up to this node
 	vector<string> tables;
-	// number of tuples in each of the tables (after selection predicates)
-	vector<int> tuples;
-	// number of tuples at this node
-	int noTuples;
+	//number of tuples
+	unsigned long int size;
 
 	// connections to children and parent
 	OptimizationTree* parent;
 	OptimizationTree* leftChild;
 	OptimizationTree* rightChild;
-};
-
-struct tableTuple {
-	unsigned long long size;
-	unsigned long long cost;
-	OptimizationTree *order;
 	Schema schema;
 
+	~OptimizationTree(){
+		//cout << "delete OptimizationTree node" << endl;
+	}
 };
+// struct tuple{
+// 	int size;
+// 	int cost;
+// 	OptimizationTree* order;
+// };
 
 class QueryOptimizer {
 private:
 	Catalog* catalog;
-
-	TableList *tables;
-	AndList *predicate;
-	OptimizationTree *root;
-
-	unordered_map<string, tableTuple> t_map;
-	unsigned long long permuatationSize;
-	
+	//map <string,tuple> omap;
+	vector<OptimizationTree*> tvec;
+	vector<OptimizationTree*> cvec;
+	OptimizationTree* root;
+	vector<OptimizationTree*> everything;
 public:
 	QueryOptimizer(Catalog& _catalog);
 	virtual ~QueryOptimizer();
 
 	void Optimize(TableList* _tables, AndList* _predicate, OptimizationTree* _root);
-	
-	unsigned long long pushDownSelection(string &tableName);
-	void initializeTablePair();
-	void partitionTables(int _numTables, vector<string> &_tableNames);
-	string getTableKey(vector<string> _tableNames);
-	void generatePermutation(vector<vector<int>> &_permutations, vector<int> &_tempVector, int size);
-	unsigned long long factorial(int _numTables);
-	
-	unsigned long long Estimate_Join_Cardinality(Schema &sch1, Schema &sch2, unsigned long long tblsize);
+
+	unsigned long int calcPushDown(AndList* _predicate, Schema schema, unsigned long int numT);
+	unsigned long int EstJoin(AndList* _predicate, Schema schema1, Schema schema2,unsigned long int num);
+	void print();
+	void postOrder(OptimizationTree* node);
 };
 
 #endif // _QUERY_OPTIMIZER_H

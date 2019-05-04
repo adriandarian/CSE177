@@ -21,6 +21,16 @@ class QueryCompiler {
 private:
 	Catalog* catalog;
 	QueryOptimizer* optimizer;
+	vector<Scan*> scans;		//Vector of all my scans
+	vector<string> scNames;	//Vector to the schemas in relation to the scans
+	vector<Schema> scSchemas;
+	vector<Select*> selects;	//Vector of selects, not necessarily inorder with scans
+	vector<int> indSS;	//Vector the matching scan index
+	vector<Join*>joins;
+	vector< vector<string> > jNames;
+	vector<Schema> jSchemas;
+	Schema wOut;
+	vector<RelationalOp*> everything;
 
 public:
 	QueryCompiler(Catalog& _catalog, QueryOptimizer& _optimizer);
@@ -30,11 +40,6 @@ public:
 		FuncOperator* _finalFunction, AndList* _predicate,
 		NameList* _groupingAtts, int& _distinctAtts,
 		QueryExecutionTree& _queryTree);
-
-	//check if depth is neccessary
-	RelationalOp* BJT(OptimizationTree*& tree, AndList* _predicate, unordered_map<string, RelationalOp*>& PD_SEL);
-	string appendSumAttributes(FuncOperator* str);
-	void printPostOrder(OptimizationTree* node);
 };
 
 #endif // _QUERY_COMPILER_H

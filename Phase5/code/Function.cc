@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <sstream>
 
 #include "Config.h"
 #include "Schema.h"
@@ -348,6 +349,23 @@ Type Function :: Apply (Record& toMe, int &intResult, double &doubleResult) {
 	}
 }
 
-int Function :: getReturnsInt() {
-	return returnsInt;
+Type Function :: GetType() {
+	if(returnsInt == 1)
+		return Integer;
+	else
+		return Float;
+}
+
+string Function :: GetTypeAsString() { 
+	if(returnsInt == 1)
+		return "INTEGER";
+	else
+		return "FLOAT";
+}
+
+bool Function :: HasOps() {
+	if(numOps > 0)
+		return true;
+	else
+		return false;
 }

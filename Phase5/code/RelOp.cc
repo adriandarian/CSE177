@@ -1,7 +1,9 @@
 #include <iostream>
-#include <cstring>
 #include <sstream>
+#include <cstring>
+#include <list>
 #include "RelOp.h"
+#include "TwoWayList.h"
 
 using namespace std;
 
@@ -15,21 +17,23 @@ Scan::Scan(Schema& _schema, DBFile& _file) {
 	schema = _schema;
 	file = _file;
 }
+bool Scan::GetNext(Record& _record){
+//	cout << "---- SCAN ------" << endl;
 
-Scan::~Scan() {
-
-}
-
-bool Scan::GetNext(Record& _record) {
-	if (file.GetNext(_record) == 0) {
+	if(file.GetNext(_record) == 0){
+		//if there is a record, return
 		return true;
+	}else{
+		//no records
+ 		return false;
 	}
-	return false;
+}
+Scan::~Scan() {
+	//printf("Deconstructor Scan\n");
 }
 
 ostream& Scan::print(ostream& _os) {
-	//file.resetCurrentPage();
-	return _os << "\t\tSCAN [" << tableName << "]";
+	return _os << "SCAN[" << file.GetFile()<<"]" << endl;
 }
 
 
@@ -38,95 +42,120 @@ Select::Select(Schema& _schema, CNF& _predicate, Record& _constants,
 	schema = _schema;
 	predicate = _predicate;
 	constants = _constants;
-	producer = _producer;
+	producer = _producer;	
 }
 
 Select::~Select() {
-
+	//printf("Deconstructor Select\n");
 }
 
-//Modified version of pseudocode from lecture
-bool Select::GetNext(Record& _record) {
-	bool ret;
-	while(ret = producer->GetNext(_record)) {
-		if(ret) {
-			if(predicate.Run(_record, constants))
-				return true;
-		}
-		else {
+bool Select::GetNext(Record& _record){
+//	cout << "---- SELECT ------" << endl;
+
+	//While there are still records from the producer
+	/*
+	while(true){
+		//Get the records
+		bool ret = producer->GetNext(_record);
+		if(!ret){
+			//No more records
 			return false;
+		}else{
+			//If there are records
+			//compare the record to the constants gotten from the predicates
+			ret = predicate.Run(_record,constants);
+			if(ret){
+				//Success, found a matching tuple
+				return true;
+			}
 		}
 	}
-	return false;
+	*/
+	// PseudoCode
+	while (true) {
+		if (!producer->GetNext(_record)) {
+			return false;
+		} else {
+			if (predicate.Run(_record, constants)) {
+				return true;
+			}
+			//TODO: Change
+			// else {
+			// 	return false;
+			// }
+		}
+	}
 }
 
 ostream& Select::print(ostream& _os) {
-	_os << "SELECT [schema: {";
-	for(int i = 0; i < predicate.numAnds; i++) {
-	 	if(i > 0) {
-	 		_os << " AND ";
-	 	}
-
-	 	Comparison compare = predicate.andList[i];
-	 	vector<Attribute> atts = schema.GetAtts();
-		//prints 1st attribute in predicate
-		if (compare.operand1 == Literal) {
-			int pointer = ((int *) constants.GetBits())[compare.whichAtt1 + 1];
-	 		if (compare.attType == Integer) {
-	 			int* myInt = (int *) &(constants.GetBits()[pointer]);
-	 			_os << *myInt;
-	 		} else if (compare.attType == Float) {
-	 			double* myDouble = (double *) &(constants.GetBits()[pointer]);
-	 			_os << *myDouble;
-	 		} else if (compare.attType == String) {
-	 			char* myString = (char *) &(constants.GetBits()[pointer]);
-	 			_os << "\'" << myString << "\'";
-	 		}
-		} else {
-			_os << atts[compare.whichAtt1].name;
+	_os << "SELECT[ Schema:{";
+	vector<Attribute> a = schema.GetAtts();
+	int j = 0;
+	for(int i = 0; i < a.size() ;i++){
+		_os << a[i].name;
+		if(i != a.size() - 1 ){
+			_os << ", ";
 		}
-
-		// print bool operator
-		switch (compare.op) {
-			case Equals:
-			{
-				_os << " = ";
+	}
+	_os << "}; Predicate (";
+	
+	for(int i = 0; i < predicate.numAnds;i++){
+		Comparison c = predicate.andList[j];
+		if(c.operand1 != Literal){
+			_os << a[c.whichAtt1].name;
+		}else{
+			int pointer = ((int *) constants.GetBits())[i + 1];
+			if (c.attType == Integer) {
+				int *myInt = (int *) &(constants.GetBits()[pointer]);
+				_os << *myInt;
 			}
-				break;
-			case LessThan:
-			{
-				_os << " < ";
+			// then is a double
+			else if (c.attType == Float) {
+				double *myDouble = (double *) &(constants.GetBits()[pointer]);
+				_os << *myDouble;
 			}
-				break;
-			case GreaterThan:
-			{
-				_os << " > ";
-			}
-				break;
+			// then is a character string
+			else if (c.attType == String) {
+				char *myString = (char *) &(constants.GetBits()[pointer]);
+				_os << myString;
+			} 
+		}
+		if(c.op == Equals){
+			_os << " = ";
+		}else if(c.op == GreaterThan){
+			_os << " > ";
+		}else if(c.op == LessThan){
+			_os << " < ";
 		}
 		
-
-		//prints 2nd attribute in predicate
-		if (compare.operand2 == Literal) {
-			int pointer = ((int *) constants.GetBits())[compare.whichAtt2 + 1];
-			if (compare.attType == Integer) {
-	 			int* myInt = (int *) &(constants.GetBits()[pointer]);
-	 			_os << *myInt;
-	 		} else if (compare.attType == Float) {
-	 			double* myDouble = (double *) &(constants.GetBits()[pointer]);
-	 			_os << *myDouble;
-	 		} else if (compare.attType == String) {
-	 			char* myString = (char *) &(constants.GetBits()[pointer]);
-	 			_os << "\'" << myString << "\'";
-	 		}
-		} else {
-			_os << atts[compare.whichAtt2].name;
+		if(c.operand2 != Literal){
+			_os << a[c.whichAtt2].name;
+		}else{
+			int pointer = ((int *) constants.GetBits())[i + 1];
+			if (c.attType == Integer) {
+				int *myInt = (int *) &(constants.GetBits()[pointer]);
+				_os << *myInt;
+			}
+			// then is a double
+			else if (c.attType == Float) {
+				double *myDouble = (double *) &(constants.GetBits()[pointer]);
+				_os << *myDouble;
+				//_os << "issafloat";
+			}
+			// then is a character string
+			else if (c.attType == String) {
+				char *myString = (char *) &(constants.GetBits()[pointer]);
+				_os << myString;
+				//_os << "issastring";
+			} 
 		}
-	 }
-	 _os << "}]" << endl;
-	 
-	 _os << *producer;
-	 return _os;
+		j++;
+
+		if(i < predicate.numAnds -1){
+			_os << " AND ";
+		}
+	}
+	return _os << ")] \t--" << *producer<< endl;
 }
 
 
@@ -134,46 +163,64 @@ Project::Project(Schema& _schemaIn, Schema& _schemaOut, int _numAttsInput,
 	int _numAttsOutput, int* _keepMe, RelationalOp* _producer) {
 	schemaIn = _schemaIn;
 	schemaOut = _schemaOut;
-	// numAttsInput is current number of attribute present in record
 	numAttsInput = _numAttsInput;
-	// numAttsOutput = number of atrribute to keep
 	numAttsOutput = _numAttsOutput;
 	keepMe = _keepMe;
 	producer = _producer;
 }
 
 Project::~Project() {
-
+	//printf("Deconstructor Project\n");
 }
 
-//Lecture Notes
-bool Project::GetNext(Record& _record) {
-	if (producer->GetNext(_record)) {
-		_record.Project( keepMe, numAttsOutput, numAttsInput);
+bool Project::GetNext(Record& _record)
+{
+//	cout << "---- PROJECT ------" << endl;
+	/*
+	//Get the produces record
+	bool ret = producer->GetNext(_record);
+	if (ret)
+	{
+		//Success project the schema
+		_record.Project(keepMe,numAttsOutput,numAttsInput);
 		return true;
 	}
-	return false;
+	else
+	{
+		//Nothing left to project
+		//cout << "false project" << endl;
+		return false;
+	}
+	*/
+	//cout << "---- PROJECT ------" << endl;
+
+	// Call for projector operator
+	bool ret = producer->GetNext(_record);
+	if (ret) {
+		_record.Project(keepMe, numAttsOutput, numAttsInput);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 ostream& Project::print(ostream& _os) {
-	_os << "PROJECT [schemaIN:{";
-	vector<Attribute>attsIN = schemaIn.GetAtts();
-	for(auto it = attsIN.begin(); it != attsIN.end(); it++) {
-	 	if(it != attsIN.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "},"<< endl;
-	 _os << "\tschemaOUT:{";
-	vector<Attribute> atts = schemaOut.GetAtts();
-	 for(auto it = atts.begin(); it != atts.end(); it++) {
-	 	if(it != atts.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "}]" << endl << endl;
-	 _os << *producer;
-	 return _os;
+	_os << "PROJECT[ schemaIn: {";
+	for(int i = 0; i < schemaIn.GetAtts().size();i++){
+		_os << schemaIn.GetAtts()[i].name;
+		if(i != schemaIn.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	_os<<"},schemaOut: {";
+	for(int i = 0; i < schemaOut.GetAtts().size();i++){
+		_os << schemaOut.GetAtts()[i].name;
+		if(i != schemaOut.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	_os << "}]"<< endl;
+	return _os << "\t\n\t--"<< *producer;
 }
 
 
@@ -184,101 +231,172 @@ Join::Join(Schema& _schemaLeft, Schema& _schemaRight, Schema& _schemaOut,
 	schemaOut = _schemaOut;
 	predicate = _predicate;
 	left = _left;
-	right = _right;
-}
-
-void Open() {
-	R.Open();
-	S.Open();
-
-	s = S.GetNext() // s = current tuple of S
-}
-
-void Close() {
-	R.Close();
-	S.Close();
-}
-
-// GetNext(): output the next (just 1 !!!) tuple in the join R ⋈ S
-void NestedLoopJoin() {
-	// Note: s already has the current (next ?) tuple of relation S
-	while (true) {
-		// Loop exits when:
-		// 	1. we found a tuple ∈ R that joins with s
-		// 	2. R ⋈ S is done (returns NotFound)
-
-		// Get the next tuple r ∈ R to Join
-		r = R.GetNext(); // Get next tuple in R to perform Join
-
-		if (r == NotFound) {
-			// Tuple s has joined with every tuple ∈ R
-			// Use next tuple ∈ S in the Join
-			s = S.GetNext();
-
-			if (s == NotFound) {
-				// We have processed the last tuple ∈ S
-				return NotFound; // Done !!!
-			}
-
-			// We have a new tuple s ∈ S
-			// Restart R from the beginning
-			R.Close(); // Close first
-			R.Open(); // Reset R to the beginning
-			r = R.GetNext(); // Get current tuple in R
-		}
-
-		// When we reach here, we have:
-		// 	s = current tuple in S for the Join operation
-		// 	r = current tuple in R for the Join operation
-
-		if (r(Y) == s(Y)) {
-			return (r, s); // Return next tuple of Join
-		}
-
-		// Repeat and try the next tuple in R
-	}
-}
-
-bool Join::GetNext(Record& _record) {
+	right = _right; 
 
 }
 
 Join::~Join() {
+		//printf("Deconstructor Join\n");
+}
 
+bool Join::GetNext(Record& _record) {
+	//Build Phase
+	//TwoWayList<string> leftList;
+	stringstream tempL, tempR;
+	Record tempRecL, tempRecR, compareRec;
+	list<string> listLeft, listRight;
+	list<Record> listRec, listTemp;
+	TwoWayList<Record> listTwo;
+	listTwo.MoveToStart();
+	char* bits;
+	int i = 0;
+
+	//advance, if at the end break
+	/*
+	for(int i = 0; i < schemaLeft.GetNumAtts(); i++) {
+		//_record.print(tempL, schemaLeft);
+		//_record.print(cout, schemaLeft);
+		
+		bits = new char[_record.GetSize()];
+		bits = _record.GetBits();
+		tempRecL.Consume(bits);
+		listRec.push_back(tempRecL);
+		//listLeft.push_back(tempL.str());		
+	}
+	for(auto it = listRec.begin(); it != listRec.end()l ++it) {
+		it->print(cout, schemaOut);
+	}
+	*/
+//	cout << "Enter Join" << endl;
+	while(true) {
+	//for(int i = 0; i < schemaLeft.GetNumAtts(); i++) {
+		//cout << schemaLeft.GetAtts()[i].name << endl;
+//		cout << "Enter Again" << endl;
+		bool ret = left->GetNext(_record);
+//		cout << "Ret: " << ret << endl;
+		if(ret == 1) {
+//		cout << "If" << endl;
+		}
+		else {
+//			cout << "Break" << endl;
+			break;
+		}
+	//	cout << "First While" << endl;
+		_record.print(tempL, schemaLeft);
+		_record.print(cout, schemaLeft);
+	//	cout << endl;
+
+		bits = new char[_record.GetSize()];
+		bits = _record.GetBits();
+	//	cout << "Consume" << endl;
+		tempRecL.Consume(bits);
+		//tempRecL.Swap(_record);
+		tempRecL.print(cout, schemaLeft);
+		_record.print(cout, schemaLeft);
+
+		//cout << endl;
+	//	cout << "Push" << endl;
+		listTwo.Append(tempRecL);
+		//listRec.push_back(_record);
+		//listLeft.push_back(tempL.str());		
+	//	cout << "End" << endl;
+	//	return true;
+	}
+
+
+	
+//	cout << "Second While" << endl;
+	while(true) {
+	//for(int i = 0; i < schemaRight.GetNumAtts(); i++) {
+		bool ret = right->GetNext(_record);
+		//cout << "2nd Ret: " << ret << endl;
+		if(ret == 1) {
+			//cout << "2nd If" << endl;
+		}
+		else {
+			//cout << "2nd break" << endl;
+			break;
+		}
+		list <Record> :: iterator it;
+		//_record.print(tempR, schemaRight);
+		//tempRecL.MergeRecords(left, right, 1, 1, te, 2, 1);
+			//Probe Phase
+		listTwo.MoveToStart();
+		//cout << "Probe print for" << endl;
+		for(int i = 0; i < listTwo.Length();i++){
+			//cout << listTwo.CurrentKey()<< ": "<< listTwo.CurrentData()<< endl;
+			//listTwo.Advance()
+			//cout << "AAA" << listTwo.Current();
+			compareRec = listTwo.Current();
+			//compareRec.show(schemaOut);
+			compareRec.print(cout, schemaOut);
+
+			cout << endl;
+			if(predicate.Run(compareRec, _record)) {
+			//if(tempR.str() == *it) {
+				//true - join
+				tempRecR.AppendRecords(compareRec, _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				//cout << "Matching" << endl;
+				_record.Swap(tempRecR);
+				cout << endl;
+				_record.print(cout, schemaOut);
+				_record.print(cout, schemaRight);
+			//	tempRecR.print(cout, schemaOut);
+				cout << endl;
+			}
+			cout << endl;
+
+			listTwo.Advance();
+		}
+		
+		//return true;
+        	
+	} // 2nd while loop
+	//return false;	
+//order maker: call predicate get sum order maker - project a schema - project a record	
+//SHJ: infinite loop. hot potato boolean that switches between each side.. keeps printing out matching records and hot potatoing
+	//copy hash join twice and have a boolean that switches between the two
 }
 
 ostream& Join::print(ostream& _os) {
-	_os << "JOIN [schemaLeft: {";
-	vector<Attribute>attsLeft = schemaLeft.GetAtts();
-	for(auto it = attsLeft.begin(); it != attsLeft.end(); it++) {
-	 	if(it != attsLeft.begin())
-	 		_os << ", ";
-	 	_os << it->name;
+	_os << "JOIN[ schemaLeft: {"; 
+	for(int i = 0; i < schemaLeft.GetAtts().size();i++){
+		_os << schemaLeft.GetAtts()[i].name;
+		if(i != schemaLeft.GetAtts().size()-1){
+			_os << ", ";
+		}
 	}
-	_os << "}, " << endl;
-
-	_os << "\tschemaRight: { ";
-	vector<Attribute>attsRight = schemaRight.GetAtts();
-	for(auto it = attsRight.begin(); it != attsRight.end(); it++) {
-	 	if(it != attsRight.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "}, "<< endl;
-
-	_os << "\tschemaOut: {";
-	vector<Attribute>attsOut = schemaOut.GetAtts();
-	for(auto it = attsOut.begin(); it != attsOut.end(); it++) {
-	 	if(it != attsOut.begin())
-	 		_os << ", ";
-	 	_os << it->name;
+	_os << "},\n";
+	for(int i = 0; i < push+1;i++){
+		_os << "\t";
+	} 
+	_os << "schemaRight: {";
+	for(int i = 0; i < schemaRight.GetAtts().size();i++){
+		_os << schemaRight.GetAtts()[i].name;
+		if(i != schemaRight.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}	
+	_os << "},\n";
+	for(int i = 0; i < push+1;i++){
+		_os << "\t";
+	} 
+	_os << "schemaOut: {";
+	for(int i = 0; i < schemaOut.GetAtts().size();i++){
+		_os << schemaOut.GetAtts()[i].name;
+		if(i != schemaOut.GetAtts().size()-1){
+			_os << ", ";
+		}
 	}
-		_os << "}]" << endl << endl;
-
-		_os << *right << endl;
-	
-	 	_os << *left << endl;
-	return _os;
+	_os << "}]\tNumber of Tuples: " << size << endl; 
+	for(int i = 0; i < push+1;i++){
+		_os << "\t";
+	}
+ 	_os <<"--"<<*right ;
+ 	for(int i = 0; i < push+1;i++){
+		_os << "\t";
+	}
+ 	return _os <<"--" << *left;
 }
 
 
@@ -288,7 +406,7 @@ DuplicateRemoval::DuplicateRemoval(Schema& _schema, RelationalOp* _producer) {
 }
 
 DuplicateRemoval::~DuplicateRemoval() {
-
+	//printf("Deconstructor DuplicateRemoval\n");
 }
 
 
@@ -296,6 +414,7 @@ bool DuplicateRemoval::GetNext(Record& _record) {
 	while(producer->GetNext(_record)) {
 		stringstream temp;
 		_record.print(temp, schema);
+		_record.GetBits();
 		//temp << endl;
 		bool exists = recordSet.find(temp.str()) != recordSet.end();
 		if(!exists) {
@@ -307,18 +426,16 @@ bool DuplicateRemoval::GetNext(Record& _record) {
 	return false;
 }
 
-ostream& DuplicateRemoval::print(ostream& _os) {
-	_os << "DISTINCT [{";
 
-	vector<Attribute> atts = schema.GetAtts();
-	for(auto it = atts.begin(); it != atts.end(); it++) {
-	 	if(it != atts.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "}]" << endl << endl;
-	 _os << *producer;
-	 return _os;
+ostream& DuplicateRemoval::print(ostream& _os) {
+	_os << "DISTINCT[{";
+	for(int i = 0; i < schema.GetAtts().size();i++){
+		_os << schema.GetAtts()[i].name;
+		if(i != schema.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	return _os<<"}]"<< "\n\t\n\t--" << *producer;
 }
 
 
@@ -331,14 +448,23 @@ Sum::Sum(Schema& _schemaIn, Schema& _schemaOut, Function& _compute,
 }
 
 Sum::~Sum() {
-
+	//printf("Deconstructor Sum\n");
 }
 
 /*
 	* Function: string GetType(), Type Apply(Record toMe, Int intResult, Double dblResult) 
 */
-bool Sum::GetNext(Record& _record) {
 
+//TODO: Implement
+bool Sum::GetNext(Record& _record) {
+	
+
+
+	double runningSum = 0;
+	Type typeSum;
+	Record tempRec;
+	bool infiniteLoop = false;	
+	char* bits = new char[1];
 	while(producer->GetNext(tempRec)) {
 		//Don't forget to set to 0
 		int tempInt = 0;
@@ -347,16 +473,29 @@ bool Sum::GetNext(Record& _record) {
 		runningSum += tempInt + tempDouble;
 		infiniteLoop = true;
 	}
+	//TODO: Change - Unsure
 	if(infiniteLoop) {
 		char* recordResult;
 		if(typeSum == Float) {
+			
+			// _record.Consume(recordResult);
+			// infiniteLoop = false;
+
 			*((double *) bits) = runningSum;
 			recordResult = new char[2*sizeof(int) + sizeof(double)];
 			((int*) recordResult)[0] = sizeof(int) + sizeof(int) + sizeof(double);
 			((int*) recordResult)[1] = sizeof(int) + sizeof(int);
 			memcpy(recordResult+2*sizeof(int), bits, sizeof(double));
 		}
+		else {
+			*((int *) bits) = (int)runningSum;
+			recordResult = new char[3*sizeof(int)];
+			((int*) recordResult)[0] = sizeof(int) + sizeof(int) + sizeof(int);
+			((int*) recordResult)[1] = sizeof(int) + sizeof(int);
+			memcpy(recordResult+2*sizeof(int), bits, sizeof(int));
+		}
 		_record.Consume(recordResult);
+		//infiniteLoop = false;
 		return true;
 	}
 	else {
@@ -366,29 +505,21 @@ bool Sum::GetNext(Record& _record) {
 }
 
 ostream& Sum::print(ostream& _os) {
-	_os << "SUM [";
-	 vector<Attribute> atts = schemaOut.GetAtts();
-	_os << expression;
-	_os << "]" << endl;
-
-	_os << "\tschemaIn{";
-	vector<Attribute>attsIN = schemaIn.GetAtts();
-	for(auto it = attsIN.begin(); it != attsIN.end(); it++) {
-	 	if(it != attsIN.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "},"<< endl;
-
-	 _os << "\tschemaOut{";
-	 for(auto it = atts.begin(); it != atts.end(); it++) {
-	 	if(it != atts.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "}]"<< endl << endl;
-	 _os << *producer;
-	 return _os;
+	 _os << "SUM:[ schemaIn: {";
+	for(int i = 0; i < schemaIn.GetAtts().size();i++){
+		_os << schemaIn.GetAtts()[i].name;
+		if(i != schemaIn.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	_os<<"},schemaOut: {";
+	for(int i = 0; i < schemaOut.GetAtts().size();i++){
+		_os << schemaOut.GetAtts()[i].name;
+		if(i != schemaOut.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	return _os << "}]" << "\n\t\n\t--" <<*producer;
 }
 
 
@@ -396,86 +527,230 @@ GroupBy::GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtt
 	Function& _compute,	RelationalOp* _producer) {
 	schemaIn = _schemaIn;
 	schemaOut = _schemaOut;
+	groupingAtts = _groupingAtts; 
+	compute = _compute;
+	producer = _producer;	
+	isFirst = true;
+}
+
+
+GroupBy::GroupBy(Schema& _schemaIn, Schema& _schemaOut, OrderMaker& _groupingAtts,
+	Function& _compute, FuncOperator* _parseTree, RelationalOp* _producer) {
+	schemaIn = _schemaIn;
+	schemaOut = _schemaOut;
+//	_schemaOut.Swap(schemaIn);
+//	schemaOut.Swap(schemaIn);
 	groupingAtts = _groupingAtts;
 	compute = _compute;
 	producer = _producer;
+	parseTree = _parseTree;
+	Function copyOfFunction(_compute);
+	Type retType = copyOfFunction.RecursivelyBuild(parseTree, _schemaIn);
+	vector<string> attrsType;
+	if (retType == Integer) {
+		attrsType.push_back("INTEGER");
+	}
+	else if (retType == Float) {
+		attrsType.push_back("FLOAT");
+	}
+	vector<string> attrsName;
+	attrsName.push_back("sum");
+	vector<unsigned int> attrsDist;
+	attrsDist.push_back(0);
+	Schema sumSchema(attrsName, attrsType, attrsDist);
+	sumSchema.Append(_schemaIn);
+	_schemaOut.Swap(sumSchema);
 }
 
 GroupBy::~GroupBy() {
-
+	//printf("Deconstructor GroupBy\n");
 }
 
+//WTF Is this shit
+//map with relational op usage
 bool GroupBy::GetNext(Record& _record) {
-	_record.Project(groupingAtts.whichAtts,groupingAtts.numAtts,schemaIn.GetNumAtts());
-
-	atts = schemaOut.GetAtts();
-	for(int i = 1; i < schemaOut.GetNumAtts();i++){
-		attNames.push_back(atts[i].name);
-	}
-	int i = 1;
-	int tempInt = 0;
-	double tempDouble = 0;
-	double runningSum = 0;
-	double insert = 0;
-
-	while(producer->GetNext(_record)){
-	//cout << "Group By Enter While" << endl;
-		compute.Apply(_record, tempInt, tempDouble);
-		//If it already exists
-		if((it = mapGroupBy.find(atts[i].name)) != mapGroupBy.end()){
-			//cout << "Does Exist If" << endl;
-			runningSum += tempInt + tempDouble;
-			it->second = runningSum;
-		}
-		else { // Does not Exist - Insert
-			//cout << "(" << name << ") Does Not Exist Else" << endl;
-			if (atts[i].type == Float) {	
-				insert = tempDouble;
-				mapGroupBy.insert(make_pair(atts[i].name, insert));
+	Type retType;
+	if(isFirst == true) {
+		isFirst = false;
+		while(1) {
+				Record * tmp = new Record();
+				bool ret = this->producer->GetNext(*tmp);
+				if(ret == false) break;
+				if(tmp->GetSize() == 0) continue;
+				++cnt;
+				string value;
+				//enum Type {Integer, Float, String, Name};
+				if(groupingAtts.whichTypes[0] == Type::Integer) {
+					char * val1 = tmp->GetColumn(groupingAtts.whichAtts[0]);//only support 1 group by attributes
+					int val1Int = *((int *) val1);
+					value = to_string(val1Int);
+				} else if(groupingAtts.whichTypes[0] == Type::Float) {
+					char * val1 = tmp->GetColumn(groupingAtts.whichAtts[0]);
+					float val1Int = *((double *)  val1);
+					value = to_string(val1Int);
+				} else {
+					char * val1 = tmp->GetColumn(groupingAtts.whichAtts[0]);
+					string valueCharTmp(val1);
+					// if(valueCharTmp == "Customer#000001359")
+					//     break;
+					value = valueCharTmp;
+				}
+				auto itgmap = gmap.find(value);
+				if(itgmap != gmap.end()) {
+					int sumIntArg = 0;
+					double sumDoubleArg = 0.0;
+					retType = compute.Apply(*tmp, sumIntArg, sumDoubleArg);
+					if(retType == Type::Integer) {
+						auto itSumInt = gmapSumInt.find(value);
+						itSumInt->second += sumIntArg;
+					} else if(retType == Type::Float) {
+						auto itSumDouble = gmapSumDouble.find(value);
+						itSumDouble->second += sumDoubleArg;
+					}
+					bool isExist = false;
+					for(auto itdeque = itgmap->second->begin(); itdeque != itgmap->second->end(); ++itdeque) {
+						if(groupingAtts.Run(**itdeque, *tmp) == 0) {
+//							cout<<"line 839\n";
+							isExist = true;
+							break;
+						}
+					}
+					if(isExist == false) {
+						itgmap->second->push_back(tmp);
+					}
+				} else {
+					int sumIntArg = 0;
+					double sumDoubleArg = 0.0;
+					retType = compute.Apply(*tmp, sumIntArg, sumDoubleArg);
+					if(retType == Type::Integer) {
+						gmapSumInt.insert(make_pair(value, sumIntArg));
+					} else if(retType == Type::Float) {
+						gmapSumDouble.insert(make_pair(value, sumDoubleArg));
+					}
+					deque<Record*> * dequeTmp = new deque<Record*>();
+					dequeTmp->push_back(tmp);
+					gmap.insert(make_pair(value, dequeTmp));
+				}
 			}
-			else if (atts[i].type == Integer) {
-				insert = tempInt;
-				mapGroupBy.insert(make_pair(atts[i].name, insert));
-			}			
-		}
-		i++;
-		return true;
-	}
-	//cout << "Group By Exit While" << endl;
+		//cout<<"line 1001 group by join :"<<cnt<<endl;
+		for(auto it = gmap.begin(); it != gmap.end(); ++it) {
+				string gname = it->first;
+				deque<Record*> * dq = it->second;
+				if(retType == Type::Integer) {
+					string tmpNum;
+					tmpNum = to_string(gmapSumInt.find(gname)->second);
+					//record
+					char* bits;
+					char* space = new char[PAGE_SIZE];
+					char* recSpace = new char[PAGE_SIZE];
+					bits = NULL;
+					int currentPosInRec = sizeof (int) * (2);
+					for(int i = 0; i < tmpNum.length(); ++i) {
+						space[i] = tmpNum[i];
+					}
+					((int *) recSpace)[1] = currentPosInRec;
+					space[tmpNum.length()] = 0;
+				//	vector<string> attrsType;
+					*((int *) &(recSpace[currentPosInRec])) = atoi(space);
+					currentPosInRec += sizeof (int);
+			//		attrsType.push_back("INTEGER");
+					((int *) recSpace)[0] = currentPosInRec;
+					bits = new char[currentPosInRec];
+					memcpy (bits, recSpace, currentPosInRec);
+					delete [] space;
+					delete [] recSpace;
+					Record sumRecord;
+					sumRecord.Consume(bits);
+					auto gmapItems = gmap.find(gname);
+					for(auto it = gmapItems->second->begin(); it != gmapItems->second->end(); ++it) {
+						Record * tmp = new Record();
+						tmp->AppendRecords(sumRecord, **it, 1, this->schemaIn.GetNumAtts());
+						((Record*)(*it))->Swap(*tmp);
+					}
 
-	//Print statement
-	if(!mapGroupBy.empty()) {
-		for(auto tempIt = mapGroupBy.begin(); tempIt != mapGroupBy.end(); ++tempIt) {
-			cout << tempIt->first << " : " << tempIt->second << endl;
-		}
+				} else if(retType == Type::Float) {
+					string tmpNum;
+					tmpNum = to_string(gmapSumDouble.find(gname)->second);
+					//record
+					char* bits;
+					char* space = new char[PAGE_SIZE];
+					char* recSpace = new char[PAGE_SIZE];
+					bits = NULL;
+					int currentPosInRec = sizeof (int) * (2);
+					for(int i = 0; i < tmpNum.length(); ++i) {
+						space[i] = tmpNum[i];
+					}
+					((int *) recSpace)[1] = currentPosInRec;
+					space[tmpNum.length()] = 0;
+					*((double *) &(recSpace[currentPosInRec])) = atof (space);
+					currentPosInRec += sizeof (double);
+			//		attrsType.push_back("FLOAT");
+					((int *) recSpace)[0] = currentPosInRec;
+					bits = new char[currentPosInRec];
+					memcpy (bits, recSpace, currentPosInRec);
+					delete [] space;
+					delete [] recSpace;
+					Record sumRecord;
+					sumRecord.Consume(bits);
+					auto gmapItems = gmap.find(gname);
+					for(auto it = gmapItems->second->begin(); it != gmapItems->second->end(); ++it) {
+						Record * tmp = new Record();
+						tmp->AppendRecords(sumRecord, **it, 1, this->schemaIn.GetNumAtts());
+						((Record*)(*it))->Swap(*tmp);
+//						auto ans = newGmap.find(gname);
+//						if(ans != newGmap.end()) {
+//							ans->second->push_back(tmp);
+//						} else {
+//							deque<Record*> * deqTmp = new deque<Record*>();
+//							deqTmp->push_back(tmp);
+//							newGmap.insert(make_pair(gname, deqTmp));
+//						}
+					}
+				}
+			}
 	}
 
-	//cout << "Group By Exit. Return False" << endl;
-	return false;
+//	cout<<"newGmap:"<<newGmap.size()<<endl;
+
+	//output gmap
+	if(!gmap.empty()) {
+		int count = 0;
+		int size = gmap.size();
+		for(auto it1 = gmap.begin(); it1 != gmap.end(); ++it1) {
+			++count;
+			if((count == size) && (it1->second->empty())) return false;
+			if(!it1->second->empty()) {
+				Record * output = it1->second->front();
+				_record.Swap(*output);
+				it1->second->pop_front();
+				return true;
+			}
+		}
+	}
 }
+
+RelationalOp* GroupBy::GetProducer() {
+	return producer;
+}
+
 
 ostream& GroupBy::print(ostream& _os) {
-	_os << "GROUP BY [";
-
-	_os << "schemaIn{";
-	vector<Attribute>attsIN = schemaIn.GetAtts();
-	for(auto it = attsIN.begin(); it != attsIN.end(); it++) {
-	 	if(it != attsIN.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "},"<< endl;
-
-	 _os << "\tschemaOut: {";
-	vector<Attribute> attsOut = schemaOut.GetAtts();
-	for(auto it = attsOut.begin(); it != attsOut.end(); it++) {
-	 	if(it != attsOut.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "}]" << endl << endl;
-	 _os << *producer;
-	 return _os;
+	_os << "GROUP BY[ schemaIn: {";
+	for(int i = 0; i < schemaIn.GetAtts().size();i++){
+		_os << schemaIn.GetAtts()[i].name;
+		if(i != schemaIn.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	_os<<"},schemaOut: {";
+	for(int i = 0; i < schemaOut.GetAtts().size();i++){
+		_os << schemaOut.GetAtts()[i].name;
+		if(i != schemaOut.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	_os << "}]"<< endl;
+	return _os << "\t\n\t--"<< *producer;
 }
 
 
@@ -483,52 +758,84 @@ WriteOut::WriteOut(Schema& _schema, string& _outFile, RelationalOp* _producer) {
 	schema = _schema;
 	outFile = _outFile;
 	producer = _producer;
+	outFile = _outFile;
+	//Open the file stream
+	out.open(outFile.c_str());
+	//cout << "---- enter ------" << endl;
 
-	myFile.open(outFile);
 }
 
 WriteOut::~WriteOut() {
-
+	//printf("Deconstructor WriteOut\n");
+	//if filestream is open, close it
+	if(out.is_open()){
+		out.close();
+	}
 }
 
 bool WriteOut::GetNext(Record& _record) {
+	//Get record from producer
+//	cout << "---- WRITE OUT ------" << endl;
+	/*
 	bool ret = producer->GetNext(_record);
-	if (ret == true) {
-		_record.print(myFile, schema);
-		myFile << endl;
-		//For Actual Output
+	if (ret)
+	{	
+		//Write to the outfile all the records matching the schema
+		_record.print(out,schema);
+		out << endl;
+		//For demo only, need to comment out all other cout statments
+		 _record.print(cout,schema);
+		 cout << endl;
+		return true;
+	}
+	else
+	{		
+		//Close the file stream
+		out.close();
+		return false;
+	}
+	*/
+
+	//cout << "---- IN WRITE OUT ------" << endl;
+	bool ret = producer->GetNext(_record);
+	if(ret) {
+	//	cout << "---- IF STATEMENT ------" << endl;
+
+		//Lecture notes line below. 
+		//outFile << _record.print(schema);
+		_record.print(out, schema);
+		out << endl;
 		_record.print(cout, schema);
 		cout << endl;
 		return true;
-	} else {
-		myFile.close();
+	}
+	else {
+		out.close();
 		return false;
 	}
 }
 
 ostream& WriteOut::print(ostream& _os) {
 	_os << "WRITE OUT [{";
-	vector<Attribute> atts = schema.GetAtts();
-	for(auto it = atts.begin(); it != atts.end(); it++) {
-	 	if(it != atts.begin())
-	 		_os << ", ";
-	 	_os << it->name;
-	 }
-	 _os << "}]" << endl << endl;
-
-	 _os << *producer;
-	return _os; 
+	for(int i = 0; i < schema.GetAtts().size();i++){
+		_os << schema.GetAtts()[i].name;
+		if(i != schema.GetAtts().size()-1){
+			_os << ", ";
+		}
+	}
+	_os<<"}]"<< endl; 
+	return _os << "\t--"<< *producer;
 }
 
+void QueryExecutionTree::ExecuteQuery(){
+	Record rec;
+	//cout << "---- EXECUTE QUERY ------" << endl;
+	while(root->GetNext(rec)) {
+		//This is enough
+	}
+}
 
 ostream& operator<<(ostream& _os, QueryExecutionTree& _op) {
-	return _os << "QUERY EXECUTION TREE:" << endl << *_op.root << endl;
-}
-
-//Lecture Notes
-void QueryExecutionTree::ExecuteQuery() {
-	Record rec;
-	while(root->GetNext(rec)) {
-		//Just Keep Swimming
-	}
+	_os << "QUERY EXECUTION TREE " <<endl; 
+	return _os << "--"<<*_op.root;
 }
