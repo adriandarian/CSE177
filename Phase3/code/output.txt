@@ -1,7 +1,0 @@
-catalog.sqlite is opened successfully.
-OK!
--1QUERY EXECUTION TREE
-catalog.sqlite is opened successfully.
-catalog.sqlite is opened successfully.
------------------Begin Saving---------------------------------------------------------------------------
------------------Done Saving----------------------------------------------------------------------------
