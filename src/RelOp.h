@@ -142,6 +142,9 @@ private:
 	RelationalOp *left;
 	RelationalOp *right;
 
+	bool leftNode = true;
+	TwoWayList<Record> TwoWayJoin;
+
 public:
 	Join(Schema &_schemaLeft, Schema &_schemaRight, Schema &_schemaOut,
 			 CNF &_predicate, RelationalOp *_left, RelationalOp *_right);

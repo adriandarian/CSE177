@@ -240,15 +240,49 @@ Join::~Join() {
 }
 
 bool Join::NestedLoopJoin(Record& _record) {
-	Record temp;
+	Record record;
 
-	if ()
+	if (leftNode) {
+		while (left->GetNext(record)) {
+			record.print(cout, schemaLeft);
+			cout << endl;
+			TwoWayJoin.Insert(record);
+		}
+		leftNode = false;
+	}
+
+	Record currentRec;
+	while(right->GetNext(record)) {
+		TwoWayJoin.MoveToStart();
+		record.print(cout, schemaRight);
+		cout << endl;
+		while(!TwoWayJoin.AtEnd()) {
+			currentRec = TwoWayJoin.Current();
+			if (predicate.Run(currentRec, record)) {
+				_record.AppendRecords(currentRec, record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				_record.print(cout, schemaOut);
+				cout << endl;
+				return true;
+			}
+			TwoWayJoin.Advance();
+		}
+	}
+
+	return false;
+}
+
+bool Join::HashJoin(Record& _record) {
+
+}
+
+bool Join::SymmetricHashJoin(Record& _record) {
+
 }
 
 bool Join::GetNext(Record& _record) {
-	if (predicate) {
-		
-	}
+	// if (predicate) {
+		NestedLoopJoin(_record);
+	// }
 }
 
 ostream& Join::print(ostream& _os) {

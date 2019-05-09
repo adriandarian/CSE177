@@ -27,7 +27,7 @@ private:
 	vector<Select *> selects; //Vector of selects, not necessarily inorder with scans
 	vector<int> indSS;				//Vector the matching scan index
 	vector<Join *> joins;
-	vector<vector<string>> jNames;
+	vector<vector<string> > jNames;
 	vector<Schema> jSchemas;
 	Schema wOut;
 	vector<RelationalOp *> everything;
