@@ -14,6 +14,7 @@
 	struct TableList* tables; // the list of tables in the query
 	struct AndList* predicate; // the predicate in WHERE
 	struct NameList* groupingAtts; // grouping attributes
+	struct NameList* createAtts; // create attributes
 	struct NameList* attsToSelect; // the attributes in SELECT
 	int distinctAtts; // 1 if there is a DISTINCT in a non-aggregate query 
 %}
@@ -55,6 +56,7 @@
 %type <myTables> Tables
 %type <myBoolOperand> Literal
 %type <myNames> Atts
+%type <char> tableName
 
 %start SQL
 
@@ -73,8 +75,6 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	predicate = $6;	
 	groupingAtts = NULL;
 }
-
-
 
 | SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts
 {
