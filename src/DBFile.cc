@@ -10,6 +10,7 @@ using namespace std;
 
 DBFile::DBFile() : fileName("")
 {
+		currPage = 0;
 }
 
 DBFile::~DBFile()
@@ -121,7 +122,7 @@ int DBFile::GetNext(Record &rec)
 			file.GetPage(page, currPage++);
 			//Get the first record of the page
 			ret = page.GetFirst(rec);
-			return 0;
+			return ret-1;
 		}
 	}
 }

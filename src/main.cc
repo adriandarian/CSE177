@@ -26,6 +26,7 @@ extern "C" int yylex_destroy();
 void menu(QueryCompiler &compiler)
 {
 }
+
 int main()
 {
 	// this is the catalog
@@ -75,14 +76,10 @@ int main()
 		compiler.Compile(tables, attsToSelect, finalFunction, predicate,
 										 groupingAtts, distinctAtts, queryTree);
 
-		//cout << queryTree << endl;
+		// cout << queryTree << endl;
 
 		queryTree.ExecuteQuery();
 	}
-	// 	}else{
-	// 		on = false;
-	// 	}
-	// }
 
 	return 0;
 }

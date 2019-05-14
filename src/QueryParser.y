@@ -74,6 +74,8 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	groupingAtts = NULL;
 }
 
+
+
 | SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts
 {
 	tables = $4;

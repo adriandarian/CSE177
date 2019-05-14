@@ -143,7 +143,9 @@ private:
 	RelationalOp *right;
 
 	bool leftNode = true;
-	TwoWayList<Record> TwoWayJoin;
+	Record record, currentRecord;
+	TwoWayList<Record> NLJ, HJ, bacHJ, SHJ, bacSHJ;
+	EfficientMap<Record, int> hashmap;
 
 public:
 	Join(Schema &_schemaLeft, Schema &_schemaRight, Schema &_schemaOut,
@@ -265,6 +267,53 @@ public:
 	virtual bool GetNext(Record &_record);
 
 	virtual RelationalOp *GetProducer();
+
+	virtual ostream &print(ostream &_os);
+};
+
+class Create : public RelationalOp
+{
+private:
+	// schema of records in operator
+	Schema schema;
+
+	// selection predicate in conjunctive normal form
+	CNF predicate;
+	// constant values for attributes in predicate
+	Record constants;
+
+	// operator generating data
+	RelationalOp *producer;
+
+public:
+	Create(Schema &_schema, CNF &_predicate, Record &_constants,
+				 RelationalOp *_producer);
+	virtual ~Create();
+
+	virtual bool GetNext(Record &_record);
+
+	virtual ostream &print(ostream &_os);
+};
+
+class LoadData : public RelationalOp
+{
+private:
+	// schema of records in operator
+	Schema schema;
+
+	// input file where to write the result records
+	string inFile;
+
+	// operator generating data
+	RelationalOp *producer;
+
+	ofstream out;
+
+public:
+	LoadData(Schema &_schema, string &_inFile, RelationalOp *_producer);
+	virtual ~LoadData();
+
+	virtual bool GetNext(Record &_record);
 
 	virtual ostream &print(ostream &_os);
 };
