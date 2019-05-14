@@ -559,7 +559,7 @@ bool GroupBy::GetNext(Record& _record) {
 		Record tempRec;
 		Record *newRec = new Record();
 
-	while(true)
+	while(true) {
 		newRec->Project(groupingAtts.whichAtts,groupingAtts.numAtts,schemaIn.GetNumAtts());
 	
 	//while(true) {
@@ -656,8 +656,8 @@ bool GroupBy::GetNext(Record& _record) {
 			}
 		}
 
+	}
 }
-
 
 RelationalOp *GroupBy::GetProducer()
 {
