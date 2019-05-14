@@ -33,6 +33,27 @@ int main()
 	string dbFile = "catalog.sqlite";
 	Catalog catalog(dbFile);
 
+	int n;
+	cout << "\nWhat would you like to do?\n";
+	cout << "\t1. Look at the schema for the catalog.\n";
+	cout << "\t2. Run a query.\n";
+	cout << "\t3. Drop a table from the catalog.\n";
+	cout << "\t4. Exit.\n";
+	cin >> n;
+
+	switch (n)
+	{
+	case 1:{
+		cout << catalog << endl;
+		break;
+	}
+	default:
+	case 2: {
+		char m;
+		cout << "Would you like to display the Query Execution Tree with the output? (y/n)\n";
+		cin >> m;
+
+
 	// this is the query optimizer
 	// it is not invoked directly but rather passed to the query compiler
 	QueryOptimizer optimizer(catalog);
@@ -58,7 +79,7 @@ int main()
 	}
 	else
 	{
-		cout << "Error: Query is not correct!" << endl;
+		cout << "Error: Query is not correct!\n";
 		parse = -1;
 	}
 
@@ -76,9 +97,25 @@ int main()
 		compiler.Compile(tables, attsToSelect, finalFunction, predicate,
 										 groupingAtts, distinctAtts, queryTree);
 
-		// cout << queryTree << endl;
+		if (m == 'y' || m == 'Y')
+			cout << queryTree << endl;
 
 		queryTree.ExecuteQuery();
+	}
+		break;
+	}
+	case 3:
+	{
+		cout<<"\nwhich table do you want to drop? ";
+		string t;
+		cin >> t;
+		catalog.DropTable(t);
+		catalog.Save();
+		break;
+	}
+	case 4:{
+		return 0;
+	}
 	}
 
 	return 0;
