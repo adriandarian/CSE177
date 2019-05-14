@@ -19,9 +19,9 @@
 #include <pthread.h>
 #include <deque>
 
-struct GroupVal
+struct Group
 {
-	double sum;
+	double runningSum;
 	Record rec;
 };
 
@@ -225,30 +225,22 @@ private:
 	RelationalOp *producer;
 
 	// 		// first-run indicator
-	// 	bool isFirst;
+
+
+	Schema tempSchema;
 
 	// 	// map for each grouping attribute
-	// 	unordered_map<string, GroupVal> groups;
+	unordered_map<string, Group> mapGroupBy;
 	// 	// unordered_map<CompositeKey, GroupVal> groups;
 
 	// 	// iterator for the groups
-	// 	unordered_map<string, GroupVal>::iterator groupsIt;
+	unordered_map<string, Group>::iterator it;
 	// // unordered_map<CompositeKey, GroupVal>::iterator groupsIt;
 	// 	FuncOperator* parseTree;
 
 public:
-	int cnt = 0;
-
-	bool isFirst = true;
-
-	unordered_map<string, deque<Record *> *> gmap;
-
-	unordered_map<string, deque<Record *> *> newGmap;
-
-	unordered_map<string, int> gmapSumInt;
-
-	unordered_map<string, double> gmapSumDouble;
-
+	 	bool isFirst = true;
+		bool first;
 	FuncOperator *parseTree;
 
 	GroupBy(Schema &_schemaIn, Schema &_schemaOut, OrderMaker &_groupingAtts,

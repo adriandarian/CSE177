@@ -181,24 +181,6 @@ Project::~Project()
 
 bool Project::GetNext(Record &_record)
 {
-	//	cout << "---- PROJECT ------" << endl;
-	/*
-	//Get the produces record
-	bool ret = producer->GetNext(_record);
-	if (ret)
-	{
-		//Success project the schema
-		_record.Project(keepMe,numAttsOutput,numAttsInput);
-		return true;
-	}
-	else
-	{
-		//Nothing left to project
-		//cout << "false project" << endl;
-		return false;
-	}
-	*/
-	//cout << "---- PROJECT ------" << endl;
 
 	// Call for projector operator
 	bool ret = producer->GetNext(_record);
@@ -486,26 +468,12 @@ bool Sum::GetNext(Record &_record)
 	if (infiniteLoop)
 	{
 		char *recordResult;
-		if (typeSum == Float)
-		{
-
-			// _record.Consume(recordResult);
-			// infiniteLoop = false;
-
 			*((double *)bits) = runningSum;
 			recordResult = new char[2 * sizeof(int) + sizeof(double)];
 			((int *)recordResult)[0] = sizeof(int) + sizeof(int) + sizeof(double);
 			((int *)recordResult)[1] = sizeof(int) + sizeof(int);
 			memcpy(recordResult + 2 * sizeof(int), bits, sizeof(double));
-		}
-		else
-		{
-			*((int *)bits) = (int)runningSum;
-			recordResult = new char[3 * sizeof(int)];
-			((int *)recordResult)[0] = sizeof(int) + sizeof(int) + sizeof(int);
-			((int *)recordResult)[1] = sizeof(int) + sizeof(int);
-			memcpy(recordResult + 2 * sizeof(int), bits, sizeof(int));
-		}
+		
 		_record.Consume(recordResult);
 		//infiniteLoop = false;
 		return true;
@@ -565,21 +533,7 @@ GroupBy::GroupBy(Schema &_schemaIn, Schema &_schemaOut, OrderMaker &_groupingAtt
 	Function copyOfFunction(_compute);
 	Type retType = copyOfFunction.RecursivelyBuild(parseTree, _schemaIn);
 	vector<string> attrsType;
-	if (retType == Integer)
-	{
-		attrsType.push_back("INTEGER");
-	}
-	else if (retType == Float)
-	{
-		attrsType.push_back("FLOAT");
-	}
-	vector<string> attrsName;
-	attrsName.push_back("sum");
-	vector<unsigned int> attrsDist;
-	attrsDist.push_back(0);
-	Schema sumSchema(attrsName, attrsType, attrsDist);
-	sumSchema.Append(_schemaIn);
-	_schemaOut.Swap(sumSchema);
+
 }
 
 GroupBy::~GroupBy()
@@ -589,199 +543,121 @@ GroupBy::~GroupBy()
 
 //WTF Is this shit
 //map with relational op usage
-bool GroupBy::GetNext(Record &_record)
-{
-	Type retType;
-	if (isFirst == true)
-	{
-		isFirst = false;
-		while (1)
-		{
-			Record *tmp = new Record();
-			bool ret = this->producer->GetNext(*tmp);
-			if (ret == false)
-				break;
-			if (tmp->GetSize() == 0)
-				continue;
-			++cnt;
-			string value;
-			//enum Type {Integer, Float, String, Name};
-			if (groupingAtts.whichTypes[0] == Type::Integer)
-			{
-				char *val1 = tmp->GetColumn(groupingAtts.whichAtts[0]); //only support 1 group by attributes
-				int val1Int = *((int *)val1);
-				value = to_string(val1Int);
-			}
-			else if (groupingAtts.whichTypes[0] == Type::Float)
-			{
-				char *val1 = tmp->GetColumn(groupingAtts.whichAtts[0]);
-				float val1Int = *((double *)val1);
-				value = to_string(val1Int);
-			}
-			else
-			{
-				char *val1 = tmp->GetColumn(groupingAtts.whichAtts[0]);
-				string valueCharTmp(val1);
-				// if(valueCharTmp == "Customer#000001359")
-				//     break;
-				value = valueCharTmp;
-			}
-			auto itgmap = gmap.find(value);
-			if (itgmap != gmap.end())
-			{
-				int sumIntArg = 0;
-				double sumDoubleArg = 0.0;
-				retType = compute.Apply(*tmp, sumIntArg, sumDoubleArg);
-				if (retType == Type::Integer)
-				{
-					auto itSumInt = gmapSumInt.find(value);
-					itSumInt->second += sumIntArg;
-				}
-				else if (retType == Type::Float)
-				{
-					auto itSumDouble = gmapSumDouble.find(value);
-					itSumDouble->second += sumDoubleArg;
-				}
-				bool isExist = false;
-				for (auto itdeque = itgmap->second->begin(); itdeque != itgmap->second->end(); ++itdeque)
-				{
-					if (groupingAtts.Run(**itdeque, *tmp) == 0)
-					{
-						// cout<<"line 839\n";
-						isExist = true;
-						break;
-					}
-				}
-				if (isExist == false)
-				{
-					itgmap->second->push_back(tmp);
-				}
-			}
-			else
-			{
-				int sumIntArg = 0;
-				double sumDoubleArg = 0.0;
-				retType = compute.Apply(*tmp, sumIntArg, sumDoubleArg);
-				if (retType == Type::Integer)
-				{
-					gmapSumInt.insert(make_pair(value, sumIntArg));
-				}
-				else if (retType == Type::Float)
-				{
-					gmapSumDouble.insert(make_pair(value, sumDoubleArg));
-				}
-				deque<Record *> *dequeTmp = new deque<Record *>();
-				dequeTmp->push_back(tmp);
-				gmap.insert(make_pair(value, dequeTmp));
-			}
-		}
-		//cout<<"line 1001 group by join :"<<cnt<<endl;
-		for (auto it = gmap.begin(); it != gmap.end(); ++it)
-		{
-			string gname = it->first;
-			deque<Record *> *dq = it->second;
-			if (retType == Type::Integer)
-			{
-				string tmpNum;
-				tmpNum = to_string(gmapSumInt.find(gname)->second);
-				//record
-				char *bits;
-				char *space = new char[PAGE_SIZE];
-				char *recSpace = new char[PAGE_SIZE];
-				bits = NULL;
-				int currentPosInRec = sizeof(int) * (2);
-				for (int i = 0; i < tmpNum.length(); ++i)
-				{
-					space[i] = tmpNum[i];
-				}
-				((int *)recSpace)[1] = currentPosInRec;
-				space[tmpNum.length()] = 0;
-				//	vector<string> attrsType;
-				*((int *)&(recSpace[currentPosInRec])) = atoi(space);
-				currentPosInRec += sizeof(int);
-				//		attrsType.push_back("INTEGER");
-				((int *)recSpace)[0] = currentPosInRec;
-				bits = new char[currentPosInRec];
-				memcpy(bits, recSpace, currentPosInRec);
-				delete[] space;
-				delete[] recSpace;
-				Record sumRecord;
-				sumRecord.Consume(bits);
-				auto gmapItems = gmap.find(gname);
-				for (auto it = gmapItems->second->begin(); it != gmapItems->second->end(); ++it)
-				{
-					Record *tmp = new Record();
-					tmp->AppendRecords(sumRecord, **it, 1, this->schemaIn.GetNumAtts());
-					((Record *)(*it))->Swap(*tmp);
-				}
-			}
-			else if (retType == Type::Float)
-			{
-				string tmpNum;
-				tmpNum = to_string(gmapSumDouble.find(gname)->second);
-				//record
-				char *bits;
-				char *space = new char[PAGE_SIZE];
-				char *recSpace = new char[PAGE_SIZE];
-				bits = NULL;
-				int currentPosInRec = sizeof(int) * (2);
-				for (int i = 0; i < tmpNum.length(); ++i)
-				{
-					space[i] = tmpNum[i];
-				}
-				((int *)recSpace)[1] = currentPosInRec;
-				space[tmpNum.length()] = 0;
-				*((double *)&(recSpace[currentPosInRec])) = atof(space);
-				currentPosInRec += sizeof(double);
-				//		attrsType.push_back("FLOAT");
-				((int *)recSpace)[0] = currentPosInRec;
-				bits = new char[currentPosInRec];
-				memcpy(bits, recSpace, currentPosInRec);
-				delete[] space;
-				delete[] recSpace;
-				Record sumRecord;
-				sumRecord.Consume(bits);
-				auto gmapItems = gmap.find(gname);
-				for (auto it = gmapItems->second->begin(); it != gmapItems->second->end(); ++it)
-				{
-					Record *tmp = new Record();
-					tmp->AppendRecords(sumRecord, **it, 1, this->schemaIn.GetNumAtts());
-					((Record *)(*it))->Swap(*tmp);
-					// auto ans = newGmap.find(gname);
-					// if(ans != newGmap.end()) {
-					// 	ans->second->push_back(tmp);
-					// } else {
-					// 	deque<Record*> * deqTmp = new deque<Record*>();
-					// 	deqTmp->push_back(tmp);
-					// 	newGmap.insert(make_pair(gname, deqTmp));
-					// }
-				}
-			}
-		}
-	}
+bool GroupBy::GetNext(Record& _record) {
+	//_record.Project(groupingAtts.whichAtts,groupingAtts.numAtts,schemaIn.GetNumAtts());
 
-	// cout<<"newGmap:"<<newGmap.size()<<endl;
+	//int i = 1;
+	int tempInt = 0;
+	double tempDouble = 0;
+	double runningSum = 0;
+	Group insertGroup;
+	//double insert = 0;
 
-	//output gmap
-	if (!gmap.empty())
-	{
-		int count = 0;
-		int size = gmap.size();
-		for (auto it1 = gmap.begin(); it1 != gmap.end(); ++it1)
-		{
-			++count;
-			if ((count == size) && (it1->second->empty()))
-				return false;
-			if (!it1->second->empty())
-			{
-				Record *output = it1->second->front();
-				_record.Swap(*output);
-				it1->second->pop_front();
-				return true;
+
+	if(first == true) {
+		first = false;
+		Record tempRec;
+		Record *newRec = new Record();
+
+	while(true)
+		newRec->Project(groupingAtts.whichAtts,groupingAtts.numAtts,schemaIn.GetNumAtts());
+	
+	//while(true) {
+	//cout << "Group By Enter While" << endl;
+		tempInt = 0;
+		tempDouble = 0.0;
+
+		string groupByString;
+		tempSchema = schemaOut;
+		double insert = 0;
+
+			tempInt = 0;
+			tempDouble = 0;
+			compute.Apply(*newRec, tempInt, tempDouble);
+			insert = tempInt + tempDouble;
+
+
+
+		newRec->Project(groupingAtts.whichAtts, groupingAtts.numAtts, schemaIn.GetNumAtts());
+
+
+//-	************************************************************
+	
+		//Get Name		
+		if(groupingAtts.whichTypes[0] == Type::String) {
+			char* groupByChar = newRec->GetColumn(groupingAtts.whichAtts[0]);
+			groupByString = string(groupByChar);
+			it = mapGroupBy.find(groupByString);
+		}
+		else if(groupingAtts.whichTypes[0] == Type::Integer) {
+			int groupByInt = *((int *) newRec->GetColumn(groupingAtts.whichAtts[0]));
+			groupByString = to_string(groupByInt);
+			it = mapGroupBy.find(groupByString);
+		}
+		else {
+			float groupByFloat = *((double *) newRec->GetColumn(groupingAtts.whichAtts[0]));
+			groupByString = to_string(groupByFloat);
+			it = mapGroupBy.find(groupByString);
+		}
+		
+//-*******************************************************************************	
+//-*******************************************************************************		
+
+		if(it != mapGroupBy.end()){
+			//cout << "Does Exist If" << endl;
+			it->second.runningSum += insert;
+			it->second.rec = *newRec;
+
+		}
+		else { // Does not Exist - Insert
+			insertGroup.rec = *newRec;
+			insertGroup.runningSum = insert;
+			mapGroupBy[groupByString] = insertGroup;
+		}
+//	} 
+
+		it = mapGroupBy.begin();
+
+
+
+	//Print statement
+//	cout << "Print Statement" << end;
+
+
+//  =============================================================================
+//  =============================================================================
+//  Put all in records for returning
+//  =============================================================================
+//  ============================================================================= * 
+//
+	
+
+		// return new record and advance iterator
+		//_record = newRec;
+		//it++;
+
+		return true;
+	} // Record Joining For Loop
+
+			//if(it == mapGroupBy.end()) {
+			//return false;
+		//}
+	//}  -- From if statement??
+	
+
+		if(!mapGroupBy.empty()) {
+			for(auto iter = mapGroupBy.begin(); iter != mapGroupBy.end(); ++iter) {
+				if(iter->second.rec.GetSize() != 0) {
+					// Record * output = iter->second.rec;
+					_record.Swap(iter->second.rec);
+					//it1->second->pop_front();
+					return true;
+				}
 			}
 		}
-	}
+
 }
+
 
 RelationalOp *GroupBy::GetProducer()
 {
@@ -895,28 +771,6 @@ WriteOut::~WriteOut()
 
 bool WriteOut::GetNext(Record &_record)
 {
-	//Get record from producer
-	//	cout << "---- WRITE OUT ------" << endl;
-	/*
-	bool ret = producer->GetNext(_record);
-	if (ret)
-	{	
-		//Write to the outfile all the records matching the schema
-		_record.print(out,schema);
-		out << endl;
-		//For demo only, need to comment out all other cout statments
-		 _record.print(cout,schema);
-		 cout << endl;
-		return true;
-	}
-	else
-	{		
-		//Close the file stream
-		out.close();
-		return false;
-	}
-	*/
-
 	//cout << "---- IN WRITE OUT ------" << endl;
 	bool ret = producer->GetNext(_record);
 	if (ret)
