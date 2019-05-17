@@ -21,16 +21,24 @@ Scan::Scan(Schema &_schema, DBFile &_file)
 
 bool Scan::GetNext(Record &_record)
 {
-	if (file.GetNext(_record) == 0)
-	{
-		// if there is a record, return
+	Record tempRecord;
+	int ret = file.GetNext(tempRecord);
+	if(ret == -1) {
+		return false;
+	} else {
+		_record.Swap(tempRecord);
 		return true;
 	}
-	else
-	{
-		// no records
-		return false;
-	}
+	// if (file.GetNext(_record) == 0)
+	// {
+	// 	// if there is a record, return
+	// 	return true;
+	// }
+	// else
+	// {
+	// 	// no records
+	// 	return false;
+	// }
 }
 Scan::~Scan()
 {
