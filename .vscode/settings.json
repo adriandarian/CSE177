@@ -16,7 +16,8 @@
     "*.sqlite": "sql",
     "*.jsx": "javascriptreact",
     "vector": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "iostream": "cpp"
   },
   "sqltools.connections": [
     {
