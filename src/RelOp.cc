@@ -222,6 +222,7 @@ Join::Join(Schema &_schemaLeft, Schema &_schemaRight, Schema &_schemaOut,
 	predicate = _predicate;
 	left = _left;
 	right = _right;
+	phase = 0;
 }
 
 Join::~Join()
@@ -230,107 +231,139 @@ Join::~Join()
 
 bool Join::NestedLoopJoin(Record &_record)
 {
-
-	NLJ.MoveToStart();
-	cout << "pre storing rec in NLJ\n";
-	while (left->GetNext(_record))
+	switch (phase)
 	{
-		NLJ.Insert(_record);
-	}
-
-	//NLJ.MoveToStart();
-	Record rec;
-	cout << "pre printing rec\n";
-	while (!NLJ.AtEnd())
+	case 0:
 	{
-		rec = NLJ.Current();
-		cout << "rec Left: --> ";
-		rec.print(cout, schemaLeft);
-		cout << endl;
-		NLJ.Advance();
-	}
-
-	while (right->GetNext(_record))
-	{
-		NLJ.MoveToStart();
-		while (!NLJ.AtEnd())
+		cout << "phase 0\n";
+		cout << "Setting Up NLJ Left\n";
+		NLJ_Left.MoveToStart();
+		while (left->GetNext(_record))
 		{
-			currentRecord = NLJ.Current();
-			cout << "rec Right: --> ";
-			currentRecord.print(cout, schemaRight);
-			cout << endl;
-			if (predicate.Run(currentRecord, _record))
-			{
-				_record.AppendRecords(currentRecord, _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-				// return true;
-			}
-			NLJ.Advance();
+			NLJ_Left.Insert(_record);
 		}
-	}
 
-	Record recEnd;
-	cout << "end printing rec\n";
-	while (!NLJ.AtEnd())
+		cout << "Setting Up NLJ Right\n";
+		NLJ_Right.MoveToStart();
+		while (right->GetNext(_record))
+		{
+			NLJ_Right.Insert(_record);
+		}
+
+		cout << "length of NLJ_Left: " << NLJ_Left.Length() << endl;
+		cout << "length of NLJ_Right: " << NLJ_Right.Length() << endl;
+
+		Record recLeft, recRight;
+
+		cout << "Printing recLeft\n";
+		while (!NLJ_Left.AtEnd())
+		{
+			recLeft = NLJ_Left.Current();
+			recLeft.print(cout, schemaLeft);
+			cout << endl;
+			NLJ_Left.Advance();
+		}
+
+		cout << "Printing recRight\n";
+		while (!NLJ_Right.AtEnd())
+		{
+			recRight = NLJ_Right.Current();
+			recRight.print(cout, schemaRight);
+			cout << endl;
+			NLJ_Right.Advance();
+		}
+		phase = 1;
+	}
+	case 1:
 	{
-		recEnd = NLJ.Current();
-		cout << "rec Out: --> ";
-		recEnd.print(cout, schemaOut);
-		cout << endl;
-		NLJ.Advance();
-	}
+		cout << "phase 1\n";
 
-	// return false;
+		cout << "length of NLJ_Left: " << NLJ_Left.Length() << endl;
+		cout << "length of NLJ_Right: " << NLJ_Right.Length() << endl;
+
+		Record tempLeft, tempRight, recLeft, recRight;
+		NLJ_Left.MoveToStart();
+
+		cout << "beginning parsing the left\n";
+		while (!NLJ_Left.AtEnd())
+		{
+			tempLeft = NLJ_Left.Current();
+			recLeft = tempLeft;
+			NLJ_Right.MoveToStart();
+
+			cout << "beginning parsing the right\n";
+			while (!NLJ_Right.AtEnd())
+			{
+				tempRight = NLJ_Right.Current();
+				recRight = tempRight;
+
+				cout << "Comparing\n";
+				if (predicate.Run(tempLeft, tempRight))
+				{
+					cout << "Found a Comparison\n";
+					_record.AppendRecords(tempLeft, tempRight, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+					// return true;
+				}
+
+				NLJ_Right.Advance();
+			}
+
+			NLJ_Left.Advance();
+		}
+		return false;
+	}
+	}
 }
 
 bool Join::HashJoin(Record &_record)
 {
-	while (left->GetNext(record))
-	{
-		HJ.Insert(record);
-	}
+	// while (left->GetNext(record))
+	// {
+	// 	HJ.Insert(record);
+	// }
 
-	while (right->GetNext(record))
-	{
-		HJ.MoveToStart();
-		while (!HJ.AtEnd())
-		{
-			currentRecord = HJ.Current();
-			if (predicate.Run(currentRecord, record))
-			{
-				_record.AppendRecords(currentRecord, record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-				return true;
-			}
-			HJ.Advance();
-		}
-	}
+	// while (right->GetNext(record))
+	// {
+	// 	HJ.MoveToStart();
+	// 	while (!HJ.AtEnd())
+	// 	{
+	// 		currentRecord = HJ.Current();
+	// 		if (predicate.Run(currentRecord, record))
+	// 		{
+	// 			_record.AppendRecords(currentRecord, record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+	// 			return true;
+	// 		}
+	// 		HJ.Advance();
+	// 	}
+	// }
 
-	return false;
+	// return false;
 }
 
 bool Join::SymmetricHashJoin(Record &_record)
 {
 
-	while (left->GetNext(record))
-	{
-		SHJ.Insert(record);
-	}
+	// while (left->GetNext(record))
+	// {
+	// 	SHJ.Insert(record);
+	// }
 
-	while (right->GetNext(record))
-	{
-		SHJ.MoveToStart();
-		while (!SHJ.AtEnd())
-		{
-			currentRecord = SHJ.Current();
-			if (predicate.Run(currentRecord, record))
-			{
-				_record.AppendRecords(currentRecord, record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-				return true;
-			}
-			SHJ.Advance();
-		}
-	}
+	// while (right->GetNext(record))
+	// {
+	// 	SHJ.MoveToStart();
+	// 	while (!SHJ.AtEnd())
+	// 	{
+	// 		currentRecord = SHJ.Current();
+	// 		if (predicate.Run(currentRecord, record))
+	// 		{
+	// 			_record.AppendRecords(currentRecord, record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+	// 			return true;
+	// 		}
+	// 		SHJ.Advance();
+	// 	}
+	// }
 
-	return false;
+	// return false;
 }
 
 bool Join::GetNext(Record &_record)

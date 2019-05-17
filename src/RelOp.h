@@ -141,9 +141,8 @@ private:
 	// operators generating data
 	RelationalOp *left;
 	RelationalOp *right;
-
-	Record record, currentRecord;
-	TwoWayList<Record> NLJ, HJ, bacHJ, SHJ, bacSHJ;
+	int phase;
+	TwoWayList<Record> NLJ, NLJ_Right, NLJ_Left, HJ, bacHJ, SHJ, bacSHJ;
 	EfficientMap<Record, int> hashmap;
 
 public:
