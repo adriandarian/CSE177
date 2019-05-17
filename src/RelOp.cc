@@ -223,6 +223,7 @@ Join::Join(Schema &_schemaLeft, Schema &_schemaRight, Schema &_schemaOut,
 	left = _left;
 	right = _right;
 	phase = 0;
+	firstLeft = true;
 }
 
 Join::~Join()
@@ -231,88 +232,78 @@ Join::~Join()
 
 bool Join::NestedLoopJoin(Record &_record)
 {
-	switch (phase)
-	{
-	case 0:
-	{
-		cout << "phase 0\n";
-		cout << "Setting Up NLJ Left\n";
-		NLJ_Left.MoveToStart();
-		while (left->GetNext(_record))
-		{
-			NLJ_Left.Insert(_record);
-		}
+	// switch (phase)
+	// {
+	// case 0:
+	// {
+	// 	cout << "phase 0\n";
+	// 	cout << "Setting Up NLJ Left\n";
+	// 	NLJ_Left.MoveToStart();
+	// 	while (left->GetNext(_record))
+	// 	{
+	// 		NLJ_Left.Insert(_record);
+	// 	}
 
-		cout << "Setting Up NLJ Right\n";
-		NLJ_Right.MoveToStart();
-		while (right->GetNext(_record))
-		{
-			NLJ_Right.Insert(_record);
-		}
+	// 	cout << "Setting Up NLJ Right\n";
+	// 	NLJ_Right.MoveToStart();
+	// 	while (right->GetNext(_record))
+	// 	{
+	// 		NLJ_Right.Insert(_record);
+	// 	}
 
-		cout << "length of NLJ_Left: " << NLJ_Left.Length() << endl;
-		cout << "length of NLJ_Right: " << NLJ_Right.Length() << endl;
+	// 	cout << "length of NLJ_Left: " << NLJ_Left.Length() << endl;
+	// 	cout << "length of NLJ_Right: " << NLJ_Right.Length() << endl;
 
-		Record recLeft, recRight;
+	// 	Record recLeft, recRight;
 
-		cout << "Printing recLeft\n";
-		while (!NLJ_Left.AtEnd())
-		{
-			recLeft = NLJ_Left.Current();
-			recLeft.print(cout, schemaLeft);
-			cout << endl;
-			NLJ_Left.Advance();
-		}
+	// 	cout << "Printing recLeft\n";
+	// 	while (!NLJ_Left.AtEnd())
+	// 	{
+	// 		recLeft = NLJ_Left.Current();
+	// 		recLeft.print(cout, schemaLeft);
+	// 		cout << endl;
+	// 		NLJ_Left.Advance();
+	// 	}
 
-		cout << "Printing recRight\n";
-		while (!NLJ_Right.AtEnd())
-		{
-			recRight = NLJ_Right.Current();
-			recRight.print(cout, schemaRight);
-			cout << endl;
-			NLJ_Right.Advance();
-		}
-		phase = 1;
-	}
-	case 1:
-	{
-		cout << "phase 1\n";
+	// 	cout << "Printing recRight\n";
+	// 	while (!NLJ_Right.AtEnd())
+	// 	{
+	// 		recRight = NLJ_Right.Current();
+	// 		recRight.print(cout, schemaRight);
+	// 		cout << endl;
+	// 		NLJ_Right.Advance();
+	// 	}
+	// 	phase = 1;
+	// }
+	// case 1:
+	// {
+	// 	cout << "phase 1\n";
 
-		cout << "length of NLJ_Left: " << NLJ_Left.Length() << endl;
-		cout << "length of NLJ_Right: " << NLJ_Right.Length() << endl;
+	// 	cout << "length of NLJ_Left: " << NLJ_Left.Length() << endl;
+	// 	cout << "length of NLJ_Right: " << NLJ_Right.Length() << endl;
 
-		Record tempLeft, tempRight, recLeft, recRight;
-		NLJ_Left.MoveToStart();
+	// 	Record currentRecord;
+	// 	cout << "beginning parsing the right\n";
+	// 	while (right->GetNext(_record))
+	// 	{
+	// 		NLJ_Left.MoveToStart();
+	// 		while (!NLJ_Left.AtEnd())
+	// 		{
+	// 			currentRecord = NLJ_Left.Current();
+	// 			cout << "Comparing\n";
+	// 			if (predicate.Run(currentRecord, _record))
+	// 			{
+	// 				cout << "Found a Comparison\n";
+	// 				_record.AppendRecords(currentRecord, _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+	// 				return true;
+	// 			}
+	// 			NLJ_Left.Advance();
+	// 		}
+	// 	}
 
-		cout << "beginning parsing the left\n";
-		while (!NLJ_Left.AtEnd())
-		{
-			tempLeft = NLJ_Left.Current();
-			recLeft = tempLeft;
-			NLJ_Right.MoveToStart();
-
-			cout << "beginning parsing the right\n";
-			while (!NLJ_Right.AtEnd())
-			{
-				tempRight = NLJ_Right.Current();
-				recRight = tempRight;
-
-				cout << "Comparing\n";
-				if (predicate.Run(tempLeft, tempRight))
-				{
-					cout << "Found a Comparison\n";
-					_record.AppendRecords(tempLeft, tempRight, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-					// return true;
-				}
-
-				NLJ_Right.Advance();
-			}
-
-			NLJ_Left.Advance();
-		}
-		return false;
-	}
-	}
+	// 	return false;
+	// }
+	// }
 }
 
 bool Join::HashJoin(Record &_record)
@@ -368,8 +359,27 @@ bool Join::SymmetricHashJoin(Record &_record)
 
 bool Join::GetNext(Record &_record)
 {
-	cout << "\nrunning Join\n";
-	NestedLoopJoin(_record);
+	// cout << "\nrunning Join\n";
+	Record tempRec;
+	if (firstLeft) {
+		while(left->GetNext(tempRec)) {
+			joinList.Insert(tempRec);
+		}
+		firstLeft = false;
+	}
+	Record currRec;
+	while(right->GetNext(tempRec)) {
+		joinList.MoveToStart();
+		while(!joinList.AtEnd()) {
+			currRec = joinList.Current();
+			if (predicate.Run(currRec, tempRec)) {
+				_record.AppendRecords(currRec, tempRec, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				return true;
+			}
+			joinList.Advance();
+		}
+	}
+	return false;
 }
 
 ostream &Join::print(ostream &_os)

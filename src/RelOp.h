@@ -142,7 +142,8 @@ private:
 	RelationalOp *left;
 	RelationalOp *right;
 	int phase;
-	TwoWayList<Record> NLJ, NLJ_Right, NLJ_Left, HJ, bacHJ, SHJ, bacSHJ;
+	bool firstLeft;
+	TwoWayList<Record> NLJ, NLJ_Right, NLJ_Left, HJ, bacHJ, SHJ, bacSHJ, joinList;
 	EfficientMap<Record, int> hashmap;
 
 public:
