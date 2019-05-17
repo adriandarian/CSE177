@@ -662,7 +662,10 @@ void QueryCompiler::Compile(TableList *_tables, NameList *_attsToSelect,
 		Function *function = new Function();
 		function->GrowFromParseTree(_finalFunction, in);
 		//GroupBy * groupBy = new GroupBy(schemaTmp, schemaTmpOut, orderMaker, *function, _finalFunction, producerLast);
-		GroupBy *gB = new GroupBy(in, out, ord, *function, _finalFunction, rP);
+
+		// GroupBy *gB = new GroupBy(in, out, ord, *function, _finalFunction, rP);
+		GroupBy *gB = new GroupBy(in, out, ord, *function, rP);
+
 		//Set the tree
 		rP = gB;
 		//Set the schema

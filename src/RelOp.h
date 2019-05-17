@@ -198,6 +198,8 @@ private:
 	// operator generating data
 	RelationalOp *producer;
 
+	int sent;
+
 public:
 	Sum(Schema &_schemaIn, Schema &_schemaOut, Function &_compute,
 			RelationalOp *_producer);
@@ -224,19 +226,10 @@ private:
 	// operator generating data
 	RelationalOp *producer;
 
-	// 		// first-run indicator
-
-
-	Schema tempSchema;
-
-	// 	// map for each grouping attribute
-	unordered_map<string, Group> mapGroupBy;
-	// 	// unordered_map<CompositeKey, GroupVal> groups;
-
-	// 	// iterator for the groups
-	unordered_map<string, Group>::iterator it;
-	// // unordered_map<CompositeKey, GroupVal>::iterator groupsIt;
-	// 	FuncOperator* parseTree;
+	Schema sum, copy;
+	int phase;
+	map <string, double> set;
+	map <string, Record> recMap;
 
 public:
 	 	bool isFirst = true;

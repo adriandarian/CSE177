@@ -13,6 +13,16 @@
 #define EQUALS 7
 
 // functional expressions
+struct AttList {
+	// attribute name
+	char* attname;
+	// attribute type
+	char* atttype;
+	// next attribute
+	struct AttList* next;
+};
+
+// functional expressions
 struct FuncOperand
 {
 	// type of the operand

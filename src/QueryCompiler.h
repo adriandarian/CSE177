@@ -21,6 +21,7 @@ class QueryCompiler
 private:
 	Catalog *catalog;
 	QueryOptimizer *optimizer;
+	
 	vector<Scan *> scans;		//Vector of all my scans
 	vector<string> scNames; //Vector to the schemas in relation to the scans
 	vector<Schema> scSchemas;
