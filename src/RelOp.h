@@ -142,7 +142,6 @@ private:
 	RelationalOp *left;
 	RelationalOp *right;
 
-	bool leftNode = true;
 	Record record, currentRecord;
 	TwoWayList<Record> NLJ, HJ, bacHJ, SHJ, bacSHJ;
 	EfficientMap<Record, int> hashmap;

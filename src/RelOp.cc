@@ -230,49 +230,63 @@ Join::~Join()
 
 bool Join::NestedLoopJoin(Record &_record)
 {
-	if (leftNode)
+
+	NLJ.MoveToStart();
+	cout << "pre storing rec in NLJ\n";
+	while (left->GetNext(_record))
 	{
-		while (left->GetNext(record))
-		{
-			NLJ.Insert(record);
-		}
-
-		NLJ.MoveToStart();
-		while (!NLJ.AtEnd()) {
-			NLJ.Current().print(cout, schemaOut);
-			NLJ.Advance();
-		}
-
-		leftNode = false;
+		NLJ.Insert(_record);
 	}
 
-	while (right->GetNext(record))
+	//NLJ.MoveToStart();
+	Record rec;
+	cout << "pre printing rec\n";
+	while (!NLJ.AtEnd())
+	{
+		rec = NLJ.Current();
+		cout << "rec Left: --> ";
+		rec.print(cout, schemaLeft);
+		cout << endl;
+		NLJ.Advance();
+	}
+
+	while (right->GetNext(_record))
 	{
 		NLJ.MoveToStart();
 		while (!NLJ.AtEnd())
 		{
 			currentRecord = NLJ.Current();
-			if (predicate.Run(currentRecord, record))
+			cout << "rec Right: --> ";
+			currentRecord.print(cout, schemaRight);
+			cout << endl;
+			if (predicate.Run(currentRecord, _record))
 			{
-				_record.AppendRecords(currentRecord, record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
-				return true;
+				_record.AppendRecords(currentRecord, _record, schemaLeft.GetNumAtts(), schemaRight.GetNumAtts());
+				// return true;
 			}
 			NLJ.Advance();
 		}
 	}
 
-	return false;
+	Record recEnd;
+	cout << "end printing rec\n";
+	while (!NLJ.AtEnd())
+	{
+		recEnd = NLJ.Current();
+		cout << "rec Out: --> ";
+		recEnd.print(cout, schemaOut);
+		cout << endl;
+		NLJ.Advance();
+	}
+
+	// return false;
 }
 
 bool Join::HashJoin(Record &_record)
 {
-	if (leftNode)
+	while (left->GetNext(record))
 	{
-		while (left->GetNext(record))
-		{
-			HJ.Insert(record);
-		}
-		leftNode = false;
+		HJ.Insert(record);
 	}
 
 	while (right->GetNext(record))
@@ -295,13 +309,10 @@ bool Join::HashJoin(Record &_record)
 
 bool Join::SymmetricHashJoin(Record &_record)
 {
-	if (leftNode)
+
+	while (left->GetNext(record))
 	{
-		while (left->GetNext(record))
-		{
-			SHJ.Insert(record);
-		}
-		leftNode = false;
+		SHJ.Insert(record);
 	}
 
 	while (right->GetNext(record))
@@ -745,7 +756,7 @@ void QueryExecutionTree::ExecuteQuery()
 {
 	Record rec;
 	unsigned long recs = 0;
-	cout << "---- EXECUTE QUERY ------\n"
+	cout << "---- EXECUTE QUERY ----\n"
 			 << endl;
 	while (root->GetNext(rec))
 	{
