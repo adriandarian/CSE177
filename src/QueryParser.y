@@ -2,6 +2,7 @@
 	#include <cstdio>
 	#include <cstring>
 	#include <cstdlib>
+	#include <string>
 	#include <iostream>
 	#include "ParseTree.h" 
 
@@ -15,7 +16,10 @@
 	struct AndList* predicate; // the predicate in WHERE
 	struct NameList* groupingAtts; // grouping attributes
 	struct NameList* attsToSelect; // the attributes in SELECT
+	struct AttList* attsToCreate; // the attributes in CREATE
 	int distinctAtts; // 1 if there is a DISTINCT in a non-aggregate query 
+	int queryType = 0; // 0 if SELECT, 1 if CREATE TABLE, 2 if LOAD, 3 if CREATE INDEX 
+	// std::string txtFile; //LOAD DATA FROM THIS TEXT FILE
 %}
 
 
@@ -28,6 +32,7 @@
 	struct Operand* myBoolOperand;
 	struct AndList* myAndList;
 	struct NameList* myNames;
+	struct AttList* myAtts;
 	char* actualChars;
 	char whichOne;
 }
@@ -45,6 +50,12 @@
 %token WHERE
 %token SUM
 %token AND
+%token CREATE
+%token TABLE
+%token LOAD
+%token DATA
+%token INDEX
+%token ON
 
 %type <myAndList> AndList
 %type <myOperand> SimpleExp
@@ -55,6 +66,10 @@
 %type <myTables> Tables
 %type <myBoolOperand> Literal
 %type <myNames> Atts
+
+%type <myAtts> TableAttribute
+%type <myAtts> Attr
+%type <myTables> IndexTable
 
 %start SQL
 
@@ -72,6 +87,7 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	tables = $4;
 	predicate = $6;	
 	groupingAtts = NULL;
+	queryType = 0;
 }
 
 | SELECT SelectAtts FROM Tables WHERE AndList GROUP BY Atts
@@ -79,6 +95,60 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	tables = $4;
 	predicate = $6;	
 	groupingAtts = $9;
+}
+
+| CREATE TABLE Tables '(' TableAttribute ')'
+{
+	tables = $3;
+	queryType = 1;
+	tables->next = NULL;
+}
+
+
+| LOAD DATA Tables FROM Atts
+{
+	tables = $3;
+	tables->next = NULL;
+	attsToSelect = $5;
+	attsToSelect->next = NULL;
+	queryType = 2;
+}
+
+| CREATE INDEX IndexTable TABLE Tables ON Atts
+{
+	tables = $3;
+	tables->next = $5;
+	tables->next->next = NULL;
+	attsToSelect = $7;
+	attsToSelect->next = NULL;
+	queryType = 3;
+};
+
+IndexTable: YY_NAME
+{
+	$$ = (struct TableList*) malloc (sizeof (struct TableList));
+	$$->tableName = $1;
+	$$->next = NULL;
+};
+
+TableAttribute: Attr ',' TableAttribute
+{
+	attsToCreate = $1;
+	attsToCreate->next = $3;
+}
+
+| Attr
+{
+	attsToCreate = $1;
+};
+
+
+Attr: YY_NAME YY_NAME
+{
+	$$ = (struct AttList*) malloc (sizeof (struct AttList));
+	$$->attname = $1;
+	$$->atttype = $2;
+	$$->next = NULL;
 };
 
 

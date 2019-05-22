@@ -19,9 +19,9 @@
 #include <pthread.h>
 #include <deque>
 
-struct GroupVal
+struct Group
 {
-	double sum;
+	double runningSum;
 	Record rec;
 };
 
@@ -141,6 +141,9 @@ private:
 	// operators generating data
 	RelationalOp *left;
 	RelationalOp *right;
+	int phase;
+	TwoWayList<Record> NLJ, NLJ_Right, NLJ_Left, HJ, bacHJ, SHJ, bacSHJ;
+	EfficientMap<Record, int> hashmap;
 
 public:
 	Join(Schema &_schemaLeft, Schema &_schemaRight, Schema &_schemaOut,
@@ -193,6 +196,8 @@ private:
 	// operator generating data
 	RelationalOp *producer;
 
+	int sent;
+
 public:
 	Sum(Schema &_schemaIn, Schema &_schemaOut, Function &_compute,
 			RelationalOp *_producer);
@@ -219,31 +224,14 @@ private:
 	// operator generating data
 	RelationalOp *producer;
 
-	// 		// first-run indicator
-	// 	bool isFirst;
-
-	// 	// map for each grouping attribute
-	// 	unordered_map<string, GroupVal> groups;
-	// 	// unordered_map<CompositeKey, GroupVal> groups;
-
-	// 	// iterator for the groups
-	// 	unordered_map<string, GroupVal>::iterator groupsIt;
-	// // unordered_map<CompositeKey, GroupVal>::iterator groupsIt;
-	// 	FuncOperator* parseTree;
+	Schema sum, copy;
+	int phase;
+	map <string, double> set;
+	map <string, Record> recMap;
 
 public:
-	int cnt = 0;
-
-	bool isFirst = true;
-
-	unordered_map<string, deque<Record *> *> gmap;
-
-	unordered_map<string, deque<Record *> *> newGmap;
-
-	unordered_map<string, int> gmapSumInt;
-
-	unordered_map<string, double> gmapSumDouble;
-
+	 	bool isFirst = true;
+		bool first;
 	FuncOperator *parseTree;
 
 	GroupBy(Schema &_schemaIn, Schema &_schemaOut, OrderMaker &_groupingAtts,
@@ -262,6 +250,53 @@ public:
 	virtual bool GetNext(Record &_record);
 
 	virtual RelationalOp *GetProducer();
+
+	virtual ostream &print(ostream &_os);
+};
+
+class Create : public RelationalOp
+{
+private:
+	// schema of records in operator
+	Schema schema;
+
+	// selection predicate in conjunctive normal form
+	CNF predicate;
+	// constant values for attributes in predicate
+	Record constants;
+
+	// operator generating data
+	RelationalOp *producer;
+
+public:
+	Create(Schema &_schema, CNF &_predicate, Record &_constants,
+				 RelationalOp *_producer);
+	virtual ~Create();
+
+	virtual bool GetNext(Record &_record);
+
+	virtual ostream &print(ostream &_os);
+};
+
+class LoadData : public RelationalOp
+{
+private:
+	// schema of records in operator
+	Schema schema;
+
+	// input file where to write the result records
+	string inFile;
+
+	// operator generating data
+	RelationalOp *producer;
+
+	ofstream out;
+
+public:
+	LoadData(Schema &_schema, string &_inFile, RelationalOp *_producer);
+	virtual ~LoadData();
+
+	virtual bool GetNext(Record &_record);
 
 	virtual ostream &print(ostream &_os);
 };
