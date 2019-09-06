@@ -95,13 +95,14 @@ SQL: SELECT SelectAtts FROM Tables WHERE AndList
 	tables = $4;
 	predicate = $6;	
 	groupingAtts = $9;
+	queryType = 0;
 }
 
 | CREATE TABLE Tables '(' TableAttribute ')'
 {
 	tables = $3;
-	queryType = 1;
 	tables->next = NULL;
+	queryType = 1;
 }
 
 

@@ -18,6 +18,8 @@ extern struct TableList *tables;					 // the list of tables in the query
 extern struct AndList *predicate;					 // the predicate in WHERE
 extern struct NameList *groupingAtts;			 // grouping attributes
 extern struct NameList *attsToSelect;			 // the attributes in SELECT
+extern struct AttList* attsToCreate; // the attributes in CREATE
+extern int queryType; // 0 if SELECT, 1 if CREATE TABLE, 2 if LOAD, 3 if CREATE INDEX
 extern int distinctAtts;									 // 1 if there is a DISTINCT in a non-aggregate query
 
 extern "C" int yyparse();
@@ -95,8 +97,8 @@ int main()
 		if (parse == 0)
 		{
 			QueryExecutionTree queryTree;
-			compiler.Compile(tables, attsToSelect, finalFunction, predicate,
-											 groupingAtts, distinctAtts, queryTree);
+			compiler.Compile(attsToCreate, queryType, tables, attsToSelect, finalFunction, predicate,
+					groupingAtts, distinctAtts, queryTree);
 
 			if (m == 'y' || m == 'Y')
 				cout << queryTree << endl;

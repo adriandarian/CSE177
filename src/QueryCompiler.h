@@ -37,7 +37,7 @@ public:
 	QueryCompiler(Catalog &_catalog, QueryOptimizer &_optimizer);
 	virtual ~QueryCompiler();
 
-	void Compile(TableList *_tables, NameList *_attsToSelect,
+	void Compile(AttList* _attsToCreate, int& _queryType, TableList *_tables, NameList *_attsToSelect,
 							 FuncOperator *_finalFunction, AndList *_predicate,
 							 NameList *_groupingAtts, int &_distinctAtts,
 							 QueryExecutionTree &_queryTree);
